@@ -120,7 +120,13 @@ const getNavTabs = (userRole: UserRole) => {
 }
 
 export function ClubApp({ club, allClubs, onBack, isGuest, userRole, userPhone, onLogin, onChangeClub, onLogout, onRoleChange, initialCheckout, onCheckoutStarted }: ClubAppProps) {
-  const [activeTab, setActiveTab] = useState<TabId>(initialCheckout ? "boutique" : "accueil")
+  const getDefaultTab = (): TabId => {
+    if (initialCheckout) return "boutique"
+    if (userRole === "admin") return "dashboard"
+    if (userRole === "staff") return "equipe"
+    return "accueil"
+  }
+  const [activeTab, setActiveTab] = useState<TabId>(getDefaultTab())
   const [isFollowing, setIsFollowing] = useState(false)
   const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
