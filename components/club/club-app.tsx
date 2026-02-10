@@ -7,13 +7,14 @@ import { motion, AnimatePresence } from "framer-motion"
 import { 
   Home, Newspaper, Calendar, ShoppingBag, User,
   ArrowLeft, Bell, Share2, Heart, Settings,
-  Ticket, Gift, BarChart3, CreditCard, Users, LayoutDashboard, ChevronRight, RefreshCw, Check, MapPin, X, Phone, Megaphone, Shirt
+  Ticket, Gift, BarChart3, CreditCard, Users, LayoutDashboard, ChevronRight, RefreshCw, Check, MapPin, X, Phone, Megaphone, Shirt, Clipboard
 } from "lucide-react"
 import Image from "next/image"
 import { Crown, Award, Lock } from "lucide-react"
 import { MembershipScreen } from "./screens/membership-screen"
 import { NotificationsScreen } from "./screens/notifications-screen"
 import { JoueurAccueilScreen, CalendrierJoueurScreen, TeamScreen, AnnouncementsScreen } from "./screens/joueur-screens"
+import { StaffEquipeScreen, StaffCalendrierScreen, StaffAnnouncementsScreen } from "./screens/staff-screens"
 
 // Types
 export interface Club {
@@ -79,7 +80,7 @@ interface ClubAppProps {
   onCheckoutStarted?: () => void
 }
 
-type TabId = "accueil" | "actu" | "agenda" | "boutique" | "profil" | "calendrier" | "equipe"
+type TabId = "accueil" | "actu" | "agenda" | "boutique" | "profil" | "calendrier" | "equipe" | "annonces"
 
 // Bottom navigation tabs - role-aware
 const getNavTabs = (userRole: UserRole) => {
@@ -88,6 +89,14 @@ const getNavTabs = (userRole: UserRole) => {
       { id: "accueil" as TabId, label: "Accueil", icon: Home },
       { id: "calendrier" as TabId, label: "Calendrier", icon: Calendar },
       { id: "equipe" as TabId, label: "Equipe", icon: Users },
+      { id: "profil" as TabId, label: "Profil", icon: User },
+    ]
+  }
+  if (userRole === "staff") {
+    return [
+      { id: "equipe" as TabId, label: "Equipe", icon: Users },
+      { id: "calendrier" as TabId, label: "Calendrier", icon: Calendar },
+      { id: "annonces" as TabId, label: "Annonces", icon: Megaphone },
       { id: "profil" as TabId, label: "Profil", icon: User },
     ]
   }
@@ -149,9 +158,10 @@ export function ClubApp({ club, allClubs, onBack, isGuest, userRole, userPhone, 
 
   // Reset tab when role changes to ensure valid tab is selected
   React.useEffect(() => {
-    const validTabs = getNavTabs(userRole).map(t => t.id)
+    const tabs = getNavTabs(userRole)
+    const validTabs = tabs.map(t => t.id)
     if (!validTabs.includes(activeTab)) {
-      setActiveTab("accueil")
+      setActiveTab(tabs[0].id)
     }
   }, [userRole])
   
@@ -337,8 +347,18 @@ export function ClubApp({ club, allClubs, onBack, isGuest, userRole, userPhone, 
   {!showMyTickets && !showDonation && !showNotifications && !showMembership && !showAnnouncements && userRole === "joueur" && activeTab === "equipe" && (
     <TeamScreen key="joueur-equipe" club={club} />
   )}
-  {/* DEFAULT TABS (all non-joueur roles) */}
-  {!showMyTickets && !showDonation && !showNotifications && !showMembership && !showAnnouncements && userRole !== "joueur" && activeTab === "accueil" && (
+  {/* STAFF-SPECIFIC TABS */}
+  {!showMyTickets && !showDonation && !showNotifications && !showMembership && !showAnnouncements && userRole === "staff" && activeTab === "equipe" && (
+    <StaffEquipeScreen key="staff-equipe" club={club} />
+  )}
+  {!showMyTickets && !showDonation && !showNotifications && !showMembership && !showAnnouncements && userRole === "staff" && activeTab === "calendrier" && (
+    <StaffCalendrierScreen key="staff-calendrier" club={club} allClubs={allClubs} />
+  )}
+  {!showMyTickets && !showDonation && !showNotifications && !showMembership && !showAnnouncements && userRole === "staff" && activeTab === "annonces" && (
+    <StaffAnnouncementsScreen key="staff-annonces" club={club} />
+  )}
+  {/* DEFAULT TABS (all non-joueur/staff roles) */}
+  {!showMyTickets && !showDonation && !showNotifications && !showMembership && !showAnnouncements && userRole !== "joueur" && userRole !== "staff" && activeTab === "accueil" && (
             <AccueilScreen key="accueil" club={club} allClubs={allClubs} userRole={userRole} isGuest={isGuest} onLogin={onLogin} onShowMyTickets={() => setShowMyTickets(true)} onGoToTab={setActiveTab} onSelectMatch={(match) => { setSelectedMatch(match); setActiveTab("agenda"); }} onShowDonation={() => setShowDonation(true)} onShowMembership={() => setShowMembership(true)} />
           )}
             {!showMyTickets && !showDonation && !showNotifications && !showMembership && activeTab === "actu" && !selectedNews && (
@@ -2873,13 +2893,15 @@ function ProfilScreen({ club, userRole, isGuest, onLogin, onChangeClub, onLogout
   const menuItems: { icon: typeof Ticket, label: string, badge?: string, visible?: boolean, action?: string }[] = [
     { icon: Shirt, label: "Ma fiche joueur", visible: userRole === "joueur", action: "membership" },
     { icon: Megaphone, label: "Annonces internes", visible: userRole === "joueur", badge: "2", action: "announcements" },
-    { icon: Ticket, label: "Mes billets", badge: ticketCount > 0 ? ticketCount.toString() : undefined, action: "mytickets" },
-    { icon: Heart, label: "Clubs suivis", badge: "3", visible: userRole !== "joueur" },
-    { icon: CreditCard, label: "Ma carte membre", visible: isMember && userRole !== "joueur", action: "membership" },
+    { icon: Users, label: "Gestion effectif", visible: userRole === "staff" },
+    { icon: Clipboard, label: "Convocations", visible: userRole === "staff", badge: "2" },
+    { icon: Ticket, label: "Mes billets", visible: userRole !== "joueur" && userRole !== "staff", badge: ticketCount > 0 ? ticketCount.toString() : undefined, action: "mytickets" },
+    { icon: Heart, label: "Clubs suivis", badge: "3", visible: userRole !== "joueur" && userRole !== "staff" },
+    { icon: CreditCard, label: "Ma carte membre", visible: isMember && userRole !== "joueur" && userRole !== "staff", action: "membership" },
     { icon: Bell, label: "Notifications", action: "notifications", badge: isMember ? "3" : undefined },
     { icon: RefreshCw, label: "Changer de club", action: "changeclub" },
     { icon: Settings, label: "Parametres" },
-    { icon: LayoutDashboard, label: "Tableau de bord", visible: userRole === "admin" || userRole === "staff" },
+    { icon: LayoutDashboard, label: "Tableau de bord", visible: userRole === "admin" },
   ].filter(item => item.visible !== false)
 
   return (
@@ -2899,9 +2921,12 @@ function ProfilScreen({ club, userRole, isGuest, onLogin, onChangeClub, onLogout
         </div>
         <div>
           <h2 className="font-bold text-foreground text-lg">Moussa Diallo</h2>
-          <p className="text-sm text-muted-foreground capitalize">{userRole} • {club.name}</p>
+          <p className="text-sm text-muted-foreground capitalize">{userRole === "staff" ? "Staff technique" : userRole} • {club.name}</p>
           {userRole === "joueur" && (
             <p className="text-xs text-muted-foreground mt-0.5">#10 - Milieu offensif</p>
+          )}
+          {userRole === "staff" && (
+            <p className="text-xs text-muted-foreground mt-0.5">Entraineur principal</p>
           )}
         </div>
       </div>
@@ -2919,6 +2944,29 @@ function ProfilScreen({ club, userRole, isGuest, onLogin, onChangeClub, onLogout
               { label: "Buts", value: "7" },
               { label: "Passes D.", value: "4" },
               { label: "Note moy.", value: "7.2" },
+            ].map(s => (
+              <div key={s.label} className="text-center p-2 rounded-xl bg-background/60">
+                <p className="font-bold text-foreground">{s.value}</p>
+                <p className="text-[10px] text-muted-foreground">{s.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Staff overview card (staff only) */}
+      {userRole === "staff" && (
+        <div
+          className="rounded-2xl p-4 relative overflow-hidden"
+          style={{ background: `linear-gradient(135deg, ${club.primaryColor}15, ${club.secondaryColor}15)` }}
+        >
+          <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">Apercu de l&apos;equipe</h3>
+          <div className="grid grid-cols-4 gap-2">
+            {[
+              { label: "Joueurs", value: "15" },
+              { label: "Aptes", value: "12" },
+              { label: "Blesses", value: "1" },
+              { label: "Matchs", value: "22" },
             ].map(s => (
               <div key={s.label} className="text-center p-2 rounded-xl bg-background/60">
                 <p className="font-bold text-foreground">{s.value}</p>
