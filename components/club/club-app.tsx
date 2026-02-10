@@ -10,9 +10,8 @@ import {
   Ticket, Gift, BarChart3, CreditCard, Users, LayoutDashboard, ChevronRight, RefreshCw, Check, MapPin, X, Phone
 } from "lucide-react"
 import Image from "next/image"
-import { Crown, Award } from "lucide-react"
+import { Crown, Award, Lock } from "lucide-react"
 import { MembershipScreen } from "./screens/membership-screen"
-import { PremiumContentScreen } from "./screens/premium-content-screen"
 import { NotificationsScreen } from "./screens/notifications-screen"
 
 // Types
@@ -108,7 +107,7 @@ export function ClubApp({ club, allClubs, onBack, isGuest, userRole, userPhone, 
   const [showDonation, setShowDonation] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
   const [showMembership, setShowMembership] = useState(false)
-  const [showPremiumContent, setShowPremiumContent] = useState(false)
+  const [showMembershipGate, setShowMembershipGate] = useState(false)
   const [purchasedTickets, setPurchasedTickets] = useState<PurchasedTicket[]>([
     // Sample purchased tickets - one scanned, one not
     {
@@ -295,57 +294,105 @@ export function ClubApp({ club, allClubs, onBack, isGuest, userRole, userPhone, 
     <MembershipScreen key="membership" club={club} userRole={userRole} isGuest={isGuest} onLogin={onLogin} onBack={() => setShowMembership(false)} />
   )}
   {/* Premium Content */}
-  {showPremiumContent && !showNotifications && !showMembership && (
-    <PremiumContentScreen key="premium" club={club} userRole={userRole} isGuest={isGuest} onLogin={onLogin} onBack={() => setShowPremiumContent(false)} />
-  )}
+
   {/* My Tickets */}
-  {showMyTickets && !showNotifications && !showMembership && !showPremiumContent && (
+  {showMyTickets && !showNotifications && !showMembership && (
     <MyTicketsScreen key="my-tickets" club={club} tickets={purchasedTickets} onBack={() => setShowMyTickets(false)} />
   )}
   {/* Donation */}
-  {showDonation && !showNotifications && !showMembership && !showPremiumContent && (
+  {showDonation && !showNotifications && !showMembership && (
     <DonationScreen key="donation" club={club} isGuest={isGuest} userPhone={userPhone} onBack={() => setShowDonation(false)} />
   )}
   
 {/* Regular tab screens - hidden when any overlay is active */}
-  {!showMyTickets && !showDonation && !showNotifications && !showMembership && !showPremiumContent && activeTab === "accueil" && (
-            <AccueilScreen key="accueil" club={club} allClubs={allClubs} userRole={userRole} isGuest={isGuest} onLogin={onLogin} onShowMyTickets={() => setShowMyTickets(true)} onGoToTab={setActiveTab} onSelectMatch={(match) => { setSelectedMatch(match); setActiveTab("agenda"); }} onShowDonation={() => setShowDonation(true)} onShowMembership={() => setShowMembership(true)} onShowPremiumContent={() => setShowPremiumContent(true)} />
+  {!showMyTickets && !showDonation && !showNotifications && !showMembership && activeTab === "accueil" && (
+            <AccueilScreen key="accueil" club={club} allClubs={allClubs} userRole={userRole} isGuest={isGuest} onLogin={onLogin} onShowMyTickets={() => setShowMyTickets(true)} onGoToTab={setActiveTab} onSelectMatch={(match) => { setSelectedMatch(match); setActiveTab("agenda"); }} onShowDonation={() => setShowDonation(true)} onShowMembership={() => setShowMembership(true)} />
           )}
-            {!showMyTickets && !showDonation && !showNotifications && !showMembership && !showPremiumContent && activeTab === "actu" && !selectedNews && (
-            <ActuScreen key="actu" club={club} onSelectNews={setSelectedNews} />
+            {!showMyTickets && !showDonation && !showNotifications && !showMembership && activeTab === "actu" && !selectedNews && (
+            <ActuScreen key="actu" club={club} onSelectNews={setSelectedNews} userRole={userRole} onShowMembershipGate={() => setShowMembershipGate(true)} />
           )}
-          {!showMyTickets && !showDonation && !showNotifications && !showMembership && !showPremiumContent && activeTab === "actu" && selectedNews && (
-            <NewsDetailScreen key="news-detail" club={club} news={selectedNews} onBack={() => setSelectedNews(null)} />
+          {!showMyTickets && !showDonation && !showNotifications && !showMembership && activeTab === "actu" && selectedNews && (
+            <NewsDetailScreen key="news-detail" club={club} news={selectedNews} onBack={() => setSelectedNews(null)} userRole={userRole} onShowMembership={() => setShowMembership(true)} />
           )}
-          {!showMyTickets && !showDonation && !showNotifications && !showMembership && !showPremiumContent && activeTab === "agenda" && !selectedMatch && !showTicketCheckout && (
+          {!showMyTickets && !showDonation && !showNotifications && !showMembership && activeTab === "agenda" && !selectedMatch && !showTicketCheckout && (
             <AgendaScreen key="agenda" club={club} allClubs={allClubs} userRole={userRole} isGuest={isGuest} onLogin={onLogin} onSelectMatch={setSelectedMatch} />
           )}
-          {!showMyTickets && !showDonation && !showNotifications && !showMembership && !showPremiumContent && activeTab === "agenda" && selectedMatch && !showTicketCheckout && (
+          {!showMyTickets && !showDonation && !showNotifications && !showMembership && activeTab === "agenda" && selectedMatch && !showTicketCheckout && (
             <TicketSelectionScreen key="ticket-selection" club={club} match={selectedMatch} onBack={() => setSelectedMatch(null)} onProceed={(items) => { handleAddTickets(items); setShowTicketCheckout(true); }} isGuest={isGuest} onLogin={onLogin} />
           )}
-          {!showMyTickets && !showDonation && !showNotifications && !showMembership && !showPremiumContent && activeTab === "agenda" && showTicketCheckout && (
+          {!showMyTickets && !showDonation && !showNotifications && !showMembership && activeTab === "agenda" && showTicketCheckout && (
             <TicketCheckoutScreen key="ticket-checkout" club={club} match={selectedMatch!} tickets={ticketCart} onBack={() => setShowTicketCheckout(false)} onComplete={handleTicketCheckoutComplete} />
           )}
-          {!showMyTickets && !showDonation && !showNotifications && !showMembership && !showPremiumContent && activeTab === "boutique" && !selectedProduct && !showCart && !showCheckout && (
-            <BoutiqueScreen key="boutique" club={club} cart={cart} onSelectProduct={setSelectedProduct} onOpenCart={() => setShowCart(true)} />
+          {!showMyTickets && !showDonation && !showNotifications && !showMembership && activeTab === "boutique" && !selectedProduct && !showCart && !showCheckout && (
+            <BoutiqueScreen key="boutique" club={club} cart={cart} onSelectProduct={setSelectedProduct} onOpenCart={() => setShowCart(true)} userRole={userRole} />
           )}
-          {!showMyTickets && !showDonation && !showNotifications && !showMembership && !showPremiumContent && activeTab === "boutique" && selectedProduct && !showCart && !showCheckout && (
-            <ProductDetailScreen key="product-detail" club={club} product={selectedProduct} onBack={() => setSelectedProduct(null)} onAddToCart={handleAddToCart} onBuyNow={handleBuyNow} />
+          {!showMyTickets && !showDonation && !showNotifications && !showMembership && activeTab === "boutique" && selectedProduct && !showCart && !showCheckout && (
+            <ProductDetailScreen key="product-detail" club={club} product={selectedProduct} onBack={() => setSelectedProduct(null)} onAddToCart={handleAddToCart} onBuyNow={handleBuyNow} userRole={userRole} />
           )}
-          {!showMyTickets && !showDonation && !showNotifications && !showMembership && !showPremiumContent && activeTab === "boutique" && showCart && !showCheckout && (
+          {!showMyTickets && !showDonation && !showNotifications && !showMembership && activeTab === "boutique" && showCart && !showCheckout && (
             <CartScreen key="cart" club={club} cart={cart} onBack={() => setShowCart(false)} onUpdateQuantity={handleUpdateQuantity} onRemoveItem={handleRemoveItem} onCheckout={() => setShowCheckout(true)} isGuest={isGuest} onLogin={onLogin} />
           )}
-          {!showMyTickets && !showDonation && !showNotifications && !showMembership && !showPremiumContent && activeTab === "boutique" && showCheckout && (
+          {!showMyTickets && !showDonation && !showNotifications && !showMembership && activeTab === "boutique" && showCheckout && (
             <CheckoutScreen key="checkout" club={club} cart={cart} onBack={() => setShowCheckout(false)} onComplete={handleCheckoutComplete} />
           )}
-          {!showMyTickets && !showDonation && !showNotifications && !showMembership && !showPremiumContent && activeTab === "profil" && (
-            <ProfilScreen key="profil" club={club} userRole={userRole} isGuest={isGuest} onLogin={onLogin} onChangeClub={onChangeClub} onLogout={onLogout} onShowMyTickets={() => setShowMyTickets(true)} ticketCount={purchasedTickets.filter(t => t.status === "upcoming").length} onRoleChange={onRoleChange} onShowMembership={() => setShowMembership(true)} onShowPremiumContent={() => setShowPremiumContent(true)} onShowNotifications={() => setShowNotifications(true)} />
+          {!showMyTickets && !showDonation && !showNotifications && !showMembership && activeTab === "profil" && (
+            <ProfilScreen key="profil" club={club} userRole={userRole} isGuest={isGuest} onLogin={onLogin} onChangeClub={onChangeClub} onLogout={onLogout} onShowMyTickets={() => setShowMyTickets(true)} ticketCount={purchasedTickets.filter(t => t.status === "upcoming").length} onRoleChange={onRoleChange} onShowMembership={() => setShowMembership(true)} onShowNotifications={() => setShowNotifications(true)} />
           )}
         </AnimatePresence>
       </div>
 
+      {/* Membership Gate Modal */}
+      <AnimatePresence>
+        {showMembershipGate && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowMembershipGate(false)}
+          >
+            <motion.div
+              initial={{ y: 300 }}
+              animate={{ y: 0 }}
+              exit={{ y: 300 }}
+              transition={{ type: "spring", damping: 25, stiffness: 250 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md bg-background rounded-t-3xl p-6 pb-10"
+            >
+              <div className="w-12 h-1.5 bg-muted rounded-full mx-auto mb-6" />
+              <div className="text-center">
+                <div 
+                  className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+                  style={{ background: `linear-gradient(135deg, ${club.primaryColor}, ${club.secondaryColor})` }}
+                >
+                  <Crown className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="font-bold text-foreground text-xl mb-2">Contenu reserve aux membres</h3>
+                <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+                  Cet article est exclusivement reserve aux membres du club. 
+                  Rejoignez-nous pour acceder a tous les contenus exclusifs, interviews et coulisses.
+                </p>
+                <button
+                  onClick={() => { setShowMembershipGate(false); setShowMembership(true); }}
+                  className="w-full py-3.5 rounded-xl text-sm font-bold text-white mb-3"
+                  style={{ background: club.primaryColor }}
+                >
+                  Devenir membre
+                </button>
+                <button
+                  onClick={() => setShowMembershipGate(false)}
+                  className="w-full py-3 rounded-xl text-sm font-medium text-muted-foreground border border-border"
+                >
+                  Plus tard
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Bottom Navigation - hidden on detail screens */}
-      {!selectedProduct && !showCart && !showCheckout && !selectedNews && !selectedMatch && !showTicketCheckout && !showMyTickets && !showDonation && !showNotifications && !showMembership && !showPremiumContent && (
+      {!selectedProduct && !showCart && !showCheckout && !selectedNews && !selectedMatch && !showTicketCheckout && !showMyTickets && !showDonation && !showNotifications && !showMembership && (
         <div className="fixed bottom-0 inset-x-0 bg-background/95 backdrop-blur-sm border-t border-border safe-area-bottom">
           <div className="flex items-center justify-around px-2 py-1.5 max-w-md mx-auto">
             {navTabs.map((tab) => (
@@ -384,7 +431,7 @@ export function ClubApp({ club, allClubs, onBack, isGuest, userRole, userPhone, 
 }
 
 // ============ ACCUEIL SCREEN ============
-function AccueilScreen({ club, allClubs, userRole, isGuest, onLogin, onShowMyTickets, onGoToTab, onSelectMatch, onShowDonation, onShowMembership, onShowPremiumContent }: { 
+function AccueilScreen({ club, allClubs, userRole, isGuest, onLogin, onShowMyTickets, onGoToTab, onSelectMatch, onShowDonation, onShowMembership }: { 
   club: Club, 
   allClubs: Club[], 
   userRole: UserRole, 
@@ -395,7 +442,6 @@ function AccueilScreen({ club, allClubs, userRole, isGuest, onLogin, onShowMyTic
   onSelectMatch: (match: MatchInfo) => void,
   onShowDonation: () => void,
   onShowMembership: () => void,
-  onShowPremiumContent: () => void,
 }) {
   // Get a deterministic opponent from same category
   const opponents = allClubs.filter(c => c.category === club.category && c.id !== club.id)
@@ -487,7 +533,7 @@ function AccueilScreen({ club, allClubs, userRole, isGuest, onLogin, onShowMyTic
       <div className="grid grid-cols-4 gap-2 sm:gap-3">
         {(userRole === "membre" || userRole === "joueur" || userRole === "staff" || userRole === "admin" ? [
           { icon: Award, label: "Adhesion", action: "adhesion" as const },
-          { icon: Crown, label: "Premium", action: "premium" as const },
+          { icon: Newspaper, label: "Actu", action: "actu" as const },
           { icon: ShoppingBag, label: "Boutique", action: "boutique" as const },
           { icon: Gift, label: "Soutenir", action: "don" as const },
         ] : [
@@ -511,8 +557,8 @@ function AccueilScreen({ club, allClubs, userRole, isGuest, onLogin, onShowMyTic
                 onShowDonation()
               } else if (item.action === "adhesion") {
                 onShowMembership()
-              } else if (item.action === "premium") {
-                onShowPremiumContent()
+              } else if (item.action === "actu") {
+                onGoToTab("actu")
               }
             }}
             className="flex flex-col items-center gap-1.5 p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-card border border-border hover:border-primary/30 transition-all"
@@ -601,10 +647,20 @@ interface NewsItem {
   likes: number
   category: string
   readTime: string
+  is_premium?: boolean
 }
 
-function ActuScreen({ club, onSelectNews }: { club: Club, onSelectNews: (news: NewsItem) => void }) {
+function ActuScreen({ club, onSelectNews, userRole, onShowMembershipGate }: { club: Club, onSelectNews: (news: NewsItem) => void, userRole: UserRole, onShowMembershipGate: () => void }) {
   const [likedNews, setLikedNews] = useState<number[]>([])
+  const isMember = userRole === "membre" || userRole === "joueur" || userRole === "staff" || userRole === "admin"
+
+  const handleSelectNews = (item: NewsItem) => {
+    if (item.is_premium && !isMember) {
+      onShowMembershipGate()
+    } else {
+      onSelectNews(item)
+    }
+  }
   
   const news: NewsItem[] = [
     { 
@@ -620,6 +676,18 @@ function ActuScreen({ club, onSelectNews }: { club: Club, onSelectNews: (news: N
     },
     { 
       id: 2, 
+      title: "Coulisses: La tactique secrete du coach devoilee", 
+      excerpt: "Decouvrez en exclusivite la preparation tactique de notre staff technique avant le derby.", 
+      content: "Dans cet article exclusif reserve a nos membres, nous vous devoilons les coulisses de la preparation du match. Le coach a mis en place un systeme de jeu innovant en 3-5-2 avec des consignes tactiques tres precises pour chaque joueur. Les seances video, les exercices specifiques et la strategie de pressing haut qui a destabilise l'adversaire. Un contenu rare qui vous plonge dans l'intimite du vestiaire.", 
+      image: "/images/news/signing.jpg", 
+      date: "Il y a 5h", 
+      likes: 312,
+      category: "Exclusif",
+      readTime: "5 min",
+      is_premium: true
+    },
+    { 
+      id: 3, 
       title: "Recrutement: Arrivee d'un nouveau talent", 
       excerpt: "Le club officialise la signature d'un joueur prometteur pour renforcer l'effectif.", 
       content: "Nous sommes heureux d'annoncer l'arrivee de notre nouvelle recrue. Ce jeune talent de 22 ans arrive en provenance du championnat local et s'est engage pour les trois prochaines saisons. Reconnu pour sa polyvalence au milieu de terrain, il apportera fraicheur et competitivite a notre effectif. Le joueur a declare etre fier de rejoindre notre famille et promet de tout donner pour les couleurs du club.", 
@@ -630,7 +698,19 @@ function ActuScreen({ club, onSelectNews }: { club: Club, onSelectNews: (news: N
       readTime: "2 min"
     },
     { 
-      id: 3, 
+      id: 4, 
+      title: "Interview exclusive: Le capitaine se confie", 
+      excerpt: "Le capitaine revient sur ses ambitions, les moments forts et l'avenir du club en exclusivite.", 
+      content: "Dans cette interview longue et intime, le capitaine de l'equipe se livre comme rarement auparavant. Il evoque son parcours, les sacrifices consentis pour arriver a ce niveau, sa vision du jeu et ses ambitions pour la fin de saison. Il parle aussi de la cohesion du groupe, du role du staff technique et de ce qui fait la force de cette equipe cette saison. Un temoignage poignant et inspirant.", 
+      image: "/images/news/training.jpg", 
+      date: "Il y a 1 jour", 
+      likes: 198,
+      category: "Exclusif",
+      readTime: "7 min",
+      is_premium: true
+    },
+    { 
+      id: 5, 
       title: "Entrainement ouvert: Venez soutenir l'equipe!", 
       excerpt: "Une seance speciale ouverte aux supporters ce samedi matin au centre d'entrainement.", 
       content: "Le club ouvre les portes de son centre d'entrainement ce samedi de 9h a 12h. Les supporters pourront assister a la seance de preparation de l'equipe premiere et rencontrer leurs joueurs preferes. Une session de dedicaces sera organisee a la fin de l'entrainement. Venez nombreux encourager nos joueurs avant le grand match de la semaine prochaine!", 
@@ -667,7 +747,7 @@ function ActuScreen({ club, onSelectNews }: { club: Club, onSelectNews: (news: N
       <motion.article
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        onClick={() => onSelectNews(news[0])}
+        onClick={() => handleSelectNews(news[0])}
         className="rounded-2xl overflow-hidden cursor-pointer group"
       >
         <div className="relative aspect-[16/10]">
@@ -679,12 +759,20 @@ function ActuScreen({ club, onSelectNews }: { club: Club, onSelectNews: (news: N
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
           
-          {/* Category badge */}
-          <div 
-            className="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-semibold text-white"
-            style={{ background: club.primaryColor }}
-          >
-            {news[0].category}
+          {/* Category + Premium badge */}
+          <div className="absolute top-3 left-3 flex items-center gap-2">
+            <div 
+              className="px-3 py-1 rounded-full text-xs font-semibold text-white"
+              style={{ background: club.primaryColor }}
+            >
+              {news[0].category}
+            </div>
+            {news[0].is_premium && (
+              <div className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold text-white bg-gradient-to-r from-amber-500 to-yellow-500">
+                <Crown className="w-3 h-3" />
+                Membre
+              </div>
+            )}
           </div>
           
           {/* Content overlay */}
@@ -721,8 +809,8 @@ function ActuScreen({ club, onSelectNews }: { club: Club, onSelectNews: (news: N
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: (index + 1) * 0.1 }}
-            onClick={() => onSelectNews(item)}
-            className="flex gap-3 p-3 rounded-xl bg-card border border-border cursor-pointer hover:border-primary/30 transition-all group"
+            onClick={() => handleSelectNews(item)}
+            className="flex gap-3 p-3 rounded-xl bg-card border border-border cursor-pointer hover:border-primary/30 transition-all group relative"
           >
             {/* Thumbnail */}
             <div className="relative w-24 h-24 rounded-lg overflow-hidden flex-shrink-0">
@@ -738,13 +826,28 @@ function ActuScreen({ club, onSelectNews }: { club: Club, onSelectNews: (news: N
               >
                 {item.category}
               </div>
+              {/* Lock overlay for non-members on premium */}
+              {item.is_premium && !isMember && (
+                <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                  <Lock className="w-5 h-5 text-white/90" />
+                </div>
+              )}
             </div>
             
             {/* Content */}
             <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
               <div>
-                <h3 className="font-semibold text-foreground text-sm leading-tight line-clamp-2 mb-1">{item.title}</h3>
-                <p className="text-xs text-muted-foreground line-clamp-1">{item.excerpt}</p>
+                <div className="flex items-center gap-1.5 mb-1">
+                  <h3 className="font-semibold text-foreground text-sm leading-tight line-clamp-2">{item.title}</h3>
+                </div>
+                {item.is_premium ? (
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <Crown className="w-3 h-3 text-amber-500" />
+                    <span className="text-[10px] font-semibold text-amber-600">Contenu membre</span>
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground line-clamp-1">{item.excerpt}</p>
+                )}
               </div>
               
               <div className="flex items-center justify-between mt-2">
@@ -770,8 +873,10 @@ function ActuScreen({ club, onSelectNews }: { club: Club, onSelectNews: (news: N
 }
 
 // ============ NEWS DETAIL SCREEN ============
-function NewsDetailScreen({ club, news, onBack }: { club: Club, news: NewsItem, onBack: () => void }) {
+function NewsDetailScreen({ club, news, onBack, userRole, onShowMembership }: { club: Club, news: NewsItem, onBack: () => void, userRole: UserRole, onShowMembership: () => void }) {
   const [isLiked, setIsLiked] = useState(false)
+  const isMember = userRole === "membre" || userRole === "joueur" || userRole === "staff" || userRole === "admin"
+  const isPremiumLocked = news.is_premium && !isMember
   
   return (
     <motion.div
@@ -798,12 +903,20 @@ function NewsDetailScreen({ club, news, onBack }: { club: Club, news: NewsItem, 
           <ArrowLeft className="w-5 h-5 text-white" />
         </button>
         
-        {/* Category badge */}
-        <div 
-          className="absolute top-4 right-4 px-3 py-1.5 rounded-full text-xs font-semibold text-white"
-          style={{ background: club.primaryColor }}
-        >
-          {news.category}
+        {/* Category + Premium badge */}
+        <div className="absolute top-4 right-4 flex items-center gap-2">
+          {news.is_premium && (
+            <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-semibold text-white bg-gradient-to-r from-amber-500 to-yellow-500">
+              <Crown className="w-3 h-3" />
+              Membre
+            </div>
+          )}
+          <div 
+            className="px-3 py-1.5 rounded-full text-xs font-semibold text-white"
+            style={{ background: club.primaryColor }}
+          >
+            {news.category}
+          </div>
         </div>
       </div>
       
@@ -815,6 +928,14 @@ function NewsDetailScreen({ club, news, onBack }: { club: Club, news: NewsItem, 
             <span>{news.date}</span>
             <span className="w-1 h-1 rounded-full bg-muted-foreground" />
             <span>{news.readTime} de lecture</span>
+            {news.is_premium && isMember && (
+              <>
+                <span className="w-1 h-1 rounded-full bg-amber-500" />
+                <span className="text-amber-600 font-medium flex items-center gap-1">
+                  <Crown className="w-3 h-3" /> Exclusif
+                </span>
+              </>
+            )}
           </div>
           
           {/* Title */}
@@ -822,40 +943,76 @@ function NewsDetailScreen({ club, news, onBack }: { club: Club, news: NewsItem, 
             {news.title}
           </h1>
           
-          {/* Article content */}
-          <div className="prose prose-sm max-w-none">
-            <p className="text-muted-foreground leading-relaxed text-pretty">
-              {news.content}
-            </p>
-          </div>
+          {/* Article content - blurred for non-members on premium */}
+          {isPremiumLocked ? (
+            <div className="relative">
+              <div className="prose prose-sm max-w-none blur-sm select-none pointer-events-none">
+                <p className="text-muted-foreground leading-relaxed text-pretty">
+                  {news.content}
+                </p>
+              </div>
+              {/* Gate overlay */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="bg-card border border-border rounded-2xl p-6 text-center shadow-lg mx-4">
+                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center mx-auto mb-4">
+                    <Crown className="w-7 h-7 text-white" />
+                  </div>
+                  <h3 className="font-bold text-foreground text-lg mb-2">Contenu reserve aux membres</h3>
+                  <p className="text-sm text-muted-foreground mb-5">
+                    Devenez membre du club pour acceder a tous les contenus exclusifs, interviews et coulisses.
+                  </p>
+                  <button
+                    onClick={onShowMembership}
+                    className="w-full py-3 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-amber-500 to-yellow-500"
+                  >
+                    Devenir membre
+                  </button>
+                  <button
+                    onClick={onBack}
+                    className="w-full py-2.5 mt-2 rounded-xl text-sm font-medium text-muted-foreground"
+                  >
+                    Retour
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="prose prose-sm max-w-none">
+              <p className="text-muted-foreground leading-relaxed text-pretty">
+                {news.content}
+              </p>
+            </div>
+          )}
           
-          {/* Actions bar */}
-          <div className="flex items-center justify-between mt-8 pt-4 border-t border-border">
-            <button 
-              onClick={() => setIsLiked(!isLiked)}
-              className="flex items-center gap-2 px-4 py-2 rounded-full transition-all"
-              style={{ 
-                background: isLiked ? `${club.primaryColor}15` : "transparent",
-                border: `1px solid ${isLiked ? club.primaryColor : "var(--border)"}` 
-              }}
-            >
-              <Heart 
-                className={`w-5 h-5 transition-all ${isLiked ? "fill-current" : ""}`}
-                style={{ color: isLiked ? club.primaryColor : "var(--muted-foreground)" }}
-              />
-              <span 
-                className="text-sm font-medium"
-                style={{ color: isLiked ? club.primaryColor : "var(--muted-foreground)" }}
+          {/* Actions bar - only shown if not locked */}
+          {!isPremiumLocked && (
+            <div className="flex items-center justify-between mt-8 pt-4 border-t border-border">
+              <button 
+                onClick={() => setIsLiked(!isLiked)}
+                className="flex items-center gap-2 px-4 py-2 rounded-full transition-all"
+                style={{ 
+                  background: isLiked ? `${club.primaryColor}15` : "transparent",
+                  border: `1px solid ${isLiked ? club.primaryColor : "var(--border)"}` 
+                }}
               >
-                {news.likes + (isLiked ? 1 : 0)} J'aime
-              </span>
-            </button>
-            
-            <button className="flex items-center gap-2 px-4 py-2 rounded-full border border-border">
-              <Share2 className="w-5 h-5 text-muted-foreground" />
-              <span className="text-sm font-medium text-muted-foreground">Partager</span>
-            </button>
-          </div>
+                <Heart 
+                  className={`w-5 h-5 transition-all ${isLiked ? "fill-current" : ""}`}
+                  style={{ color: isLiked ? club.primaryColor : "var(--muted-foreground)" }}
+                />
+                <span 
+                  className="text-sm font-medium"
+                  style={{ color: isLiked ? club.primaryColor : "var(--muted-foreground)" }}
+                >
+                  {news.likes + (isLiked ? 1 : 0)} J'aime
+                </span>
+              </button>
+              
+              <button className="flex items-center gap-2 px-4 py-2 rounded-full border border-border">
+                <Share2 className="w-5 h-5 text-muted-foreground" />
+                <span className="text-sm font-medium text-muted-foreground">Partager</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </motion.div>
@@ -1862,6 +2019,7 @@ interface Product {
   name: string
   price: number
   originalPrice?: number
+  memberPrice?: number
   image: string
   tag?: string
   description: string
@@ -1882,6 +2040,7 @@ const products: Product[] = [
     name: "Maillot Domicile 2024", 
     price: 25000, 
     originalPrice: 30000, 
+    memberPrice: 20000,
     image: "/images/products/jersey-home.jpg", 
     tag: "Promo",
     description: "Le maillot officiel de la saison 2024. Tissu respirant haute performance, ecusson brode, coupe moderne et confortable.",
@@ -1892,6 +2051,7 @@ const products: Product[] = [
     id: 2, 
     name: "Maillot Training", 
     price: 18000, 
+    memberPrice: 14500,
     image: "/images/products/training.jpg",
     description: "Maillot d'entrainement officiel. Leger et respirant, parfait pour vos seances de sport.",
     sizes: ["S", "M", "L", "XL"],
@@ -1901,6 +2061,7 @@ const products: Product[] = [
     id: 3, 
     name: "Echarpe officielle", 
     price: 8000, 
+    memberPrice: 6500,
     image: "/images/products/scarf.jpg", 
     tag: "Populaire",
     description: "Echarpe tricotee aux couleurs du club. Indispensable pour supporter votre equipe au stade.",
@@ -1909,6 +2070,7 @@ const products: Product[] = [
     id: 4, 
     name: "Casquette du club", 
     price: 5000, 
+    memberPrice: 4000,
     image: "/images/products/cap.jpg",
     description: "Casquette snapback avec logo brode. Ajustable, taille unique.",
     colors: [{ name: "Vert", hex: "#1B5E20" }, { name: "Noir", hex: "#212121" }]
@@ -1916,13 +2078,15 @@ const products: Product[] = [
 ]
 
 // ============ BOUTIQUE SCREEN ============
-function BoutiqueScreen({ club, cart, onSelectProduct, onOpenCart }: { 
+function BoutiqueScreen({ club, cart, onSelectProduct, onOpenCart, userRole }: { 
   club: Club, 
   cart: CartItem[], 
   onSelectProduct: (product: Product) => void,
-  onOpenCart: () => void 
+  onOpenCart: () => void,
+  userRole: UserRole
 }) {
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0)
+  const isMember = userRole === "membre" || userRole === "joueur" || userRole === "staff" || userRole === "admin"
 
   return (
     <motion.div
@@ -1951,84 +2115,107 @@ function BoutiqueScreen({ club, cart, onSelectProduct, onOpenCart }: {
       </div>
       
       <div className="grid grid-cols-2 gap-3">
-        {products.map((product, index) => (
-          <motion.button
-            key={product.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.08 }}
-            onClick={() => onSelectProduct(product)}
-            className="group relative rounded-2xl overflow-hidden bg-card text-left"
-          >
-            {/* Product image */}
-            <div className="aspect-[4/5] relative overflow-hidden">
-              <Image 
-                src={product.image || "/placeholder.svg"} 
-                alt={product.name} 
-                fill 
-                className="object-cover group-hover:scale-105 transition-transform duration-500" 
-              />
-              
-              {/* Promo badge with savings */}
-              {product.originalPrice && (
-                <div className="absolute top-2 left-2 px-2 py-1 rounded-full text-[10px] font-bold text-white bg-red-500">
-                  -{Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%
+        {products.map((product, index) => {
+          const displayPrice = isMember && product.memberPrice ? product.memberPrice : product.price
+          const showMemberDiscount = isMember && product.memberPrice && product.memberPrice < product.price
+          
+          return (
+            <motion.button
+              key={product.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.08 }}
+              onClick={() => onSelectProduct(product)}
+              className="group relative rounded-2xl overflow-hidden bg-card text-left"
+            >
+              {/* Product image */}
+              <div className="aspect-[4/5] relative overflow-hidden">
+                <Image 
+                  src={product.image || "/placeholder.svg"} 
+                  alt={product.name} 
+                  fill 
+                  className="object-cover group-hover:scale-105 transition-transform duration-500" 
+                />
+                
+                {/* Badges */}
+                <div className="absolute top-2 left-2 flex flex-col gap-1">
+                  {/* Member discount badge */}
+                  {showMemberDiscount && (
+                    <div className="flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold text-white bg-gradient-to-r from-amber-500 to-yellow-500">
+                      <Crown className="w-3 h-3" />
+                      -{Math.round(((product.price - product.memberPrice!) / product.price) * 100)}%
+                    </div>
+                  )}
+                  {/* Promo badge */}
+                  {product.originalPrice && !showMemberDiscount && (
+                    <div className="px-2 py-1 rounded-full text-[10px] font-bold text-white bg-red-500">
+                      -{Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%
+                    </div>
+                  )}
+                  {/* Tag badge */}
+                  {product.tag && !product.originalPrice && !showMemberDiscount && (
+                    <div 
+                      className="px-2 py-1 rounded-full text-[10px] font-bold text-white"
+                      style={{ background: club.primaryColor }}
+                    >
+                      {product.tag}
+                    </div>
+                  )}
                 </div>
-              )}
-              
-              {/* Tag badge (if no promo) */}
-              {product.tag && !product.originalPrice && (
-                <div 
-                  className="absolute top-2 left-2 px-2 py-1 rounded-full text-[10px] font-bold text-white"
-                  style={{ background: club.primaryColor }}
-                >
-                  {product.tag}
-                </div>
-              )}
-              
-              {/* Bottom gradient */}
-              <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/90 via-black/60 to-transparent" />
-              
-              {/* Product info */}
-              <div className="absolute inset-x-0 bottom-0 p-3">
-                <h3 className="font-semibold text-white text-xs leading-tight mb-2 line-clamp-2">{product.name}</h3>
-                <div className="flex items-baseline gap-2">
-                  <span className="font-bold text-white text-sm">{product.price.toLocaleString()}</span>
-                  <span className="text-white/60 text-[10px]">FCFA</span>
-                </div>
-                {product.originalPrice && (
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-white/50 text-xs line-through">{product.originalPrice.toLocaleString()} FCFA</span>
-                    <span className="text-green-400 text-[10px] font-semibold">
-                      Economisez {(product.originalPrice - product.price).toLocaleString()} FCFA
-                    </span>
+                
+                {/* Bottom gradient */}
+                <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/90 via-black/60 to-transparent" />
+                
+                {/* Product info */}
+                <div className="absolute inset-x-0 bottom-0 p-3">
+                  <h3 className="font-semibold text-white text-xs leading-tight mb-2 line-clamp-2">{product.name}</h3>
+                  <div className="flex items-baseline gap-2">
+                    <span className="font-bold text-white text-sm">{displayPrice.toLocaleString()}</span>
+                    <span className="text-white/60 text-[10px]">FCFA</span>
                   </div>
-                )}
+                  {showMemberDiscount && (
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-white/50 text-xs line-through">{product.price.toLocaleString()} FCFA</span>
+                      <span className="text-amber-400 text-[10px] font-semibold">
+                        Prix membre
+                      </span>
+                    </div>
+                  )}
+                  {product.originalPrice && !showMemberDiscount && (
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-white/50 text-xs line-through">{product.originalPrice.toLocaleString()} FCFA</span>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          </motion.button>
-        ))}
+            </motion.button>
+          )
+        })}
       </div>
     </motion.div>
   )
 }
 
 // ============ PRODUCT DETAIL SCREEN ============
-function ProductDetailScreen({ club, product, onBack, onAddToCart, onBuyNow }: { 
+function ProductDetailScreen({ club, product, onBack, onAddToCart, onBuyNow, userRole }: { 
   club: Club, 
   product: Product, 
   onBack: () => void,
   onAddToCart: (item: CartItem) => void,
-  onBuyNow: (item: CartItem) => void
+  onBuyNow: (item: CartItem) => void,
+  userRole: UserRole
 }) {
   const [quantity, setQuantity] = useState(1)
   const [selectedSize, setSelectedSize] = useState(product.sizes?.[1] || "")
   const [selectedColor, setSelectedColor] = useState(product.colors?.[0]?.name || "")
   const [addedToCart, setAddedToCart] = useState(false)
+  const isMember = userRole === "membre" || userRole === "joueur" || userRole === "staff" || userRole === "admin"
+  const displayPrice = isMember && product.memberPrice ? product.memberPrice : product.price
+  const showMemberDiscount = isMember && product.memberPrice && product.memberPrice < product.price
 
   const handleAddToCart = () => {
     onAddToCart({
-      product,
+      product: { ...product, price: displayPrice },
       quantity,
       size: selectedSize,
       color: selectedColor
@@ -2039,7 +2226,7 @@ function ProductDetailScreen({ club, product, onBack, onAddToCart, onBuyNow }: {
 
   const handleBuyNow = () => {
     onBuyNow({
-      product,
+      product: { ...product, price: displayPrice },
       quantity,
       size: selectedSize,
       color: selectedColor
@@ -2070,12 +2257,20 @@ function ProductDetailScreen({ club, product, onBack, onAddToCart, onBuyNow }: {
           <ArrowLeft className="w-5 h-5 text-white" />
         </button>
         
-        {/* Promo badge */}
-        {product.originalPrice && (
-          <div className="absolute top-4 right-4 px-3 py-1.5 rounded-full text-sm font-bold text-white bg-red-500">
-            -{Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%
-          </div>
-        )}
+        {/* Badge top right */}
+        <div className="absolute top-4 right-4 flex flex-col gap-1.5 items-end">
+          {showMemberDiscount && (
+            <div className="flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-bold text-white bg-gradient-to-r from-amber-500 to-yellow-500">
+              <Crown className="w-3.5 h-3.5" />
+              -{Math.round(((product.price - product.memberPrice!) / product.price) * 100)}%
+            </div>
+          )}
+          {product.originalPrice && !showMemberDiscount && (
+            <div className="px-3 py-1.5 rounded-full text-sm font-bold text-white bg-red-500">
+              -{Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%
+            </div>
+          )}
+        </div>
       </div>
       
       {/* Content */}
@@ -2084,16 +2279,37 @@ function ProductDetailScreen({ club, product, onBack, onAddToCart, onBuyNow }: {
         <div>
           <h1 className="text-base font-bold text-foreground mb-1">{product.name}</h1>
           <div className="flex items-baseline gap-2">
-            <span className="text-lg font-bold" style={{ color: club.primaryColor }}>
-              {product.price.toLocaleString()} FCFA
+            <span className="text-lg font-bold" style={{ color: showMemberDiscount ? "#d97706" : club.primaryColor }}>
+              {displayPrice.toLocaleString()} FCFA
             </span>
-            {product.originalPrice && (
+            {showMemberDiscount && (
+              <span className="text-sm text-muted-foreground line-through">
+                {product.price.toLocaleString()}
+              </span>
+            )}
+            {product.originalPrice && !showMemberDiscount && (
               <span className="text-sm text-muted-foreground line-through">
                 {product.originalPrice.toLocaleString()}
               </span>
             )}
           </div>
-          {product.originalPrice && (
+          {showMemberDiscount && (
+            <div className="flex items-center gap-1.5 mt-1">
+              <Crown className="w-3.5 h-3.5 text-amber-500" />
+              <p className="text-xs text-amber-600 font-semibold">
+                Prix membre - Economisez {(product.price - product.memberPrice!).toLocaleString()} FCFA
+              </p>
+            </div>
+          )}
+          {!showMemberDiscount && product.memberPrice && !isMember && (
+            <div className="flex items-center gap-1.5 mt-1.5 px-3 py-1.5 rounded-lg bg-amber-50 border border-amber-200">
+              <Crown className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
+              <p className="text-xs text-amber-700">
+                Prix membre: <span className="font-bold">{product.memberPrice.toLocaleString()} FCFA</span> - Devenez membre!
+              </p>
+            </div>
+          )}
+          {product.originalPrice && !showMemberDiscount && (
             <p className="text-xs text-green-600 font-medium mt-0.5">
               Economisez {(product.originalPrice - product.price).toLocaleString()} FCFA
             </p>
@@ -2168,7 +2384,7 @@ function ProductDetailScreen({ club, product, onBack, onAddToCart, onBuyNow }: {
               +
             </button>
             <span className="text-xs text-muted-foreground ml-1">
-              Total: {(product.price * quantity).toLocaleString()} FCFA
+              Total: {(displayPrice * quantity).toLocaleString()} FCFA
             </span>
           </div>
         </div>
@@ -2206,7 +2422,7 @@ function ProductDetailScreen({ club, product, onBack, onAddToCart, onBuyNow }: {
             className="flex-[2] py-2.5 rounded-lg text-sm font-semibold text-white flex items-center justify-center gap-1.5"
             style={{ background: club.primaryColor }}
           >
-            Acheter - {(product.price * quantity).toLocaleString()} FCFA
+            Acheter - {(displayPrice * quantity).toLocaleString()} FCFA
           </button>
         </div>
       </div>
@@ -2576,7 +2792,7 @@ function CheckoutScreen({ club, cart, onBack, onComplete }: {
 }
 
 // ============ PROFIL SCREEN ============
-function ProfilScreen({ club, userRole, isGuest, onLogin, onChangeClub, onLogout, onShowMyTickets, ticketCount, onRoleChange, onShowMembership, onShowPremiumContent, onShowNotifications }: { 
+function ProfilScreen({ club, userRole, isGuest, onLogin, onChangeClub, onLogout, onShowMyTickets, ticketCount, onRoleChange, onShowMembership, onShowNotifications }: { 
   club: Club, 
   userRole: UserRole, 
   isGuest: boolean, 
@@ -2587,7 +2803,6 @@ function ProfilScreen({ club, userRole, isGuest, onLogin, onChangeClub, onLogout
   ticketCount: number,
   onRoleChange?: (role: UserRole) => void,
   onShowMembership: () => void,
-  onShowPremiumContent: () => void,
   onShowNotifications: () => void,
 }) {
   if (isGuest) {
@@ -2625,7 +2840,6 @@ function ProfilScreen({ club, userRole, isGuest, onLogin, onChangeClub, onLogout
     { icon: Ticket, label: "Mes billets", badge: ticketCount > 0 ? ticketCount.toString() : undefined, action: "mytickets" },
     { icon: Heart, label: "Clubs suivis", badge: "3" },
     { icon: CreditCard, label: "Ma carte membre", visible: isMember, action: "membership" },
-    { icon: Crown, label: "Contenu premium", visible: isMember, action: "premium" },
     { icon: Bell, label: "Notifications", action: "notifications", badge: isMember ? "3" : undefined },
     { icon: RefreshCw, label: "Changer de club", action: "changeclub" },
     { icon: Settings, label: "Parametres" },
@@ -2665,7 +2879,6 @@ function ProfilScreen({ club, userRole, isGuest, onLogin, onChangeClub, onLogout
               if (item.action === "mytickets") onShowMyTickets()
               else if (item.action === "changeclub") onChangeClub()
               else if (item.action === "membership") onShowMembership()
-              else if (item.action === "premium") onShowPremiumContent()
               else if (item.action === "notifications") onShowNotifications()
             }}
             className="w-full flex items-center justify-between p-4 rounded-2xl bg-card border border-border hover:border-primary/30 transition-all"
