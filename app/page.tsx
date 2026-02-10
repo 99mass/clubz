@@ -29,7 +29,7 @@ export default function Home() {
   const handleAuthComplete = (phone: string) => {
     setUserPhone(phone)
     setIsGuest(false)
-    setUserRole("supporter") // Default role after login, can be membre/joueur/staff/admin based on backend
+    setUserRole("membre") // Default role after login: membre to showcase STEP 4 features
     
     // If user was in a club portal before login, return to that club
     if (pendingClub) {
@@ -39,6 +39,10 @@ export default function Home() {
     } else {
       setAppState("clubs")
     }
+  }
+
+  const handleRoleChange = (role: UserRole) => {
+    setUserRole(role)
   }
 
   const handleSkipAuth = () => {
@@ -106,6 +110,7 @@ export default function Home() {
         onLogin={handleLogin}
         onChangeClub={handleChangeClub}
         onLogout={handleLogout}
+        onRoleChange={handleRoleChange}
         initialCheckout={pendingCheckout}
         onCheckoutStarted={() => setPendingCheckout(false)}
       />
