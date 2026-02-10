@@ -10,6 +10,10 @@ import {
   Ticket, Gift, BarChart3, CreditCard, Users, LayoutDashboard, ChevronRight, RefreshCw, Check, MapPin, X, Phone
 } from "lucide-react"
 import Image from "next/image"
+import { Crown, Award } from "lucide-react"
+import { MembershipScreen } from "./screens/membership-screen"
+import { PremiumContentScreen } from "./screens/premium-content-screen"
+import { NotificationsScreen } from "./screens/notifications-screen"
 
 // Types
 export interface Club {
@@ -70,14 +74,24 @@ interface ClubAppProps {
   onLogin: (fromCheckout?: boolean) => void
   onChangeClub: () => void
   onLogout: () => void
+  onRoleChange?: (role: UserRole) => void
   initialCheckout?: boolean
   onCheckoutStarted?: () => void
 }
 
-type TabId = "accueil" | "actu" | "agenda" | "boutique" | "profil"
+type TabId = "accueil" | "actu" | "agenda" | "boutique" | "profil" | "adhesion" | "premium"
 
 // Bottom navigation tabs
 const getNavTabs = (role: UserRole) => {
+  if (role === "membre" || role === "joueur" || role === "staff" || role === "admin") {
+    return [
+      { id: "accueil" as TabId, label: "Accueil", icon: Home },
+      { id: "adhesion" as TabId, label: "Adhesion", icon: Award },
+      { id: "premium" as TabId, label: "Premium", icon: Crown },
+      { id: "boutique" as TabId, label: "Boutique", icon: ShoppingBag },
+      { id: "profil" as TabId, label: "Profil", icon: User },
+    ]
+  }
   const baseTabs = [
     { id: "accueil" as TabId, label: "Accueil", icon: Home },
     { id: "actu" as TabId, label: "Actu", icon: Newspaper },
@@ -88,7 +102,7 @@ const getNavTabs = (role: UserRole) => {
   return baseTabs
 }
 
-export function ClubApp({ club, allClubs, onBack, isGuest, userRole, userPhone, onLogin, onChangeClub, onLogout, initialCheckout, onCheckoutStarted }: ClubAppProps) {
+export function ClubApp({ club, allClubs, onBack, isGuest, userRole, userPhone, onLogin, onChangeClub, onLogout, onRoleChange, initialCheckout, onCheckoutStarted }: ClubAppProps) {
   const [activeTab, setActiveTab] = useState<TabId>(initialCheckout ? "boutique" : "accueil")
   const [isFollowing, setIsFollowing] = useState(false)
   const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null)
@@ -102,6 +116,7 @@ export function ClubApp({ club, allClubs, onBack, isGuest, userRole, userPhone, 
   const [showTicketCheckout, setShowTicketCheckout] = useState(false)
   const [showMyTickets, setShowMyTickets] = useState(false)
   const [showDonation, setShowDonation] = useState(false)
+  const [showNotifications, setShowNotifications] = useState(false)
   const [purchasedTickets, setPurchasedTickets] = useState<PurchasedTicket[]>([
     // Sample purchased tickets - one scanned, one not
     {
@@ -263,8 +278,14 @@ export function ClubApp({ club, allClubs, onBack, isGuest, userRole, userPhone, 
           </div>
 
           {/* Right: Notification */}
-          <button className="w-9 h-9 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
+          <button 
+            onClick={() => setShowNotifications(true)}
+            className="w-9 h-9 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0 relative"
+          >
             <Bell className="w-4 h-4 text-white" />
+            {(userRole === "membre" || userRole === "joueur" || userRole === "staff" || userRole === "admin") && (
+              <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-red-500 border-2" style={{ borderColor: club.primaryColor }} />
+            )}
           </button>
         </div>
       </div>
@@ -272,55 +293,67 @@ export function ClubApp({ club, allClubs, onBack, isGuest, userRole, userPhone, 
       {/* Content area */}
       <div className="flex-1 overflow-y-auto pb-16">
         <AnimatePresence mode="wait">
+{/* Notifications Screen - shown on top of everything */}
+  {showNotifications && (
+    <NotificationsScreen key="notifications" club={club} userRole={userRole} onBack={() => setShowNotifications(false)} />
+  )}
+
 {/* My Tickets Screen - shown on top of everything */}
-  {showMyTickets && (
+  {showMyTickets && !showNotifications && (
     <MyTicketsScreen key="my-tickets" club={club} tickets={purchasedTickets} onBack={() => setShowMyTickets(false)} />
   )}
   
   {/* Donation Screen */}
-  {showDonation && (
+  {showDonation && !showNotifications && (
     <DonationScreen key="donation" club={club} isGuest={isGuest} userPhone={userPhone} onBack={() => setShowDonation(false)} />
   )}
   
 {/* Regular screens - hidden when overlay screens are shown */}
-  {!showMyTickets && !showDonation && activeTab === "accueil" && (
+  {/* Member screens */}
+  {!showMyTickets && !showDonation && !showNotifications && activeTab === "adhesion" && (
+    <MembershipScreen key="adhesion" club={club} userRole={userRole} isGuest={isGuest} onLogin={onLogin} />
+  )}
+  {!showMyTickets && !showDonation && !showNotifications && activeTab === "premium" && (
+    <PremiumContentScreen key="premium" club={club} userRole={userRole} isGuest={isGuest} onLogin={onLogin} />
+  )}
+  {!showMyTickets && !showDonation && !showNotifications && activeTab === "accueil" && (
             <AccueilScreen key="accueil" club={club} allClubs={allClubs} userRole={userRole} isGuest={isGuest} onLogin={onLogin} onShowMyTickets={() => setShowMyTickets(true)} onGoToTab={setActiveTab} onSelectMatch={(match) => { setSelectedMatch(match); setActiveTab("agenda"); }} onShowDonation={() => setShowDonation(true)} />
           )}
-          {!showMyTickets && !showDonation && activeTab === "actu" && !selectedNews && (
+            {!showMyTickets && !showDonation && !showNotifications && activeTab === "actu" && !selectedNews && (
             <ActuScreen key="actu" club={club} onSelectNews={setSelectedNews} />
           )}
-          {!showMyTickets && !showDonation && activeTab === "actu" && selectedNews && (
+          {!showMyTickets && !showDonation && !showNotifications && activeTab === "actu" && selectedNews && (
             <NewsDetailScreen key="news-detail" club={club} news={selectedNews} onBack={() => setSelectedNews(null)} />
           )}
-          {!showMyTickets && !showDonation && activeTab === "agenda" && !selectedMatch && !showTicketCheckout && (
+          {!showMyTickets && !showDonation && !showNotifications && activeTab === "agenda" && !selectedMatch && !showTicketCheckout && (
             <AgendaScreen key="agenda" club={club} allClubs={allClubs} userRole={userRole} isGuest={isGuest} onLogin={onLogin} onSelectMatch={setSelectedMatch} />
           )}
-          {!showMyTickets && !showDonation && activeTab === "agenda" && selectedMatch && !showTicketCheckout && (
+          {!showMyTickets && !showDonation && !showNotifications && activeTab === "agenda" && selectedMatch && !showTicketCheckout && (
             <TicketSelectionScreen key="ticket-selection" club={club} match={selectedMatch} onBack={() => setSelectedMatch(null)} onProceed={(items) => { handleAddTickets(items); setShowTicketCheckout(true); }} isGuest={isGuest} onLogin={onLogin} />
           )}
-          {!showMyTickets && !showDonation && activeTab === "agenda" && showTicketCheckout && (
+          {!showMyTickets && !showDonation && !showNotifications && activeTab === "agenda" && showTicketCheckout && (
             <TicketCheckoutScreen key="ticket-checkout" club={club} match={selectedMatch!} tickets={ticketCart} onBack={() => setShowTicketCheckout(false)} onComplete={handleTicketCheckoutComplete} />
           )}
-          {!showMyTickets && !showDonation && activeTab === "boutique" && !selectedProduct && !showCart && !showCheckout && (
+          {!showMyTickets && !showDonation && !showNotifications && activeTab === "boutique" && !selectedProduct && !showCart && !showCheckout && (
             <BoutiqueScreen key="boutique" club={club} cart={cart} onSelectProduct={setSelectedProduct} onOpenCart={() => setShowCart(true)} />
           )}
-          {!showMyTickets && !showDonation && activeTab === "boutique" && selectedProduct && !showCart && !showCheckout && (
+          {!showMyTickets && !showDonation && !showNotifications && activeTab === "boutique" && selectedProduct && !showCart && !showCheckout && (
             <ProductDetailScreen key="product-detail" club={club} product={selectedProduct} onBack={() => setSelectedProduct(null)} onAddToCart={handleAddToCart} onBuyNow={handleBuyNow} />
           )}
-          {!showMyTickets && !showDonation && activeTab === "boutique" && showCart && !showCheckout && (
+          {!showMyTickets && !showDonation && !showNotifications && activeTab === "boutique" && showCart && !showCheckout && (
             <CartScreen key="cart" club={club} cart={cart} onBack={() => setShowCart(false)} onUpdateQuantity={handleUpdateQuantity} onRemoveItem={handleRemoveItem} onCheckout={() => setShowCheckout(true)} isGuest={isGuest} onLogin={onLogin} />
           )}
-          {!showMyTickets && !showDonation && activeTab === "boutique" && showCheckout && (
+          {!showMyTickets && !showDonation && !showNotifications && activeTab === "boutique" && showCheckout && (
             <CheckoutScreen key="checkout" club={club} cart={cart} onBack={() => setShowCheckout(false)} onComplete={handleCheckoutComplete} />
           )}
-          {!showMyTickets && !showDonation && activeTab === "profil" && (
-            <ProfilScreen key="profil" club={club} userRole={userRole} isGuest={isGuest} onLogin={onLogin} onChangeClub={onChangeClub} onLogout={onLogout} onShowMyTickets={() => setShowMyTickets(true)} ticketCount={purchasedTickets.filter(t => t.status === "upcoming").length} />
+          {!showMyTickets && !showDonation && !showNotifications && activeTab === "profil" && (
+            <ProfilScreen key="profil" club={club} userRole={userRole} isGuest={isGuest} onLogin={onLogin} onChangeClub={onChangeClub} onLogout={onLogout} onShowMyTickets={() => setShowMyTickets(true)} ticketCount={purchasedTickets.filter(t => t.status === "upcoming").length} onRoleChange={onRoleChange} />
           )}
         </AnimatePresence>
       </div>
 
       {/* Bottom Navigation - hidden on detail screens */}
-      {!selectedProduct && !showCart && !showCheckout && !selectedNews && !selectedMatch && !showTicketCheckout && !showMyTickets && !showDonation && (
+      {!selectedProduct && !showCart && !showCheckout && !selectedNews && !selectedMatch && !showTicketCheckout && !showMyTickets && !showDonation && !showNotifications && (
         <div className="fixed bottom-0 inset-x-0 bg-background/95 backdrop-blur-sm border-t border-border safe-area-bottom">
           <div className="flex items-center justify-around px-2 py-1.5 max-w-md mx-auto">
             {navTabs.map((tab) => (
@@ -370,9 +403,9 @@ function AccueilScreen({ club, allClubs, userRole, isGuest, onLogin, onShowMyTic
   onSelectMatch: (match: MatchInfo) => void,
   onShowDonation: () => void
 }) {
-  // Get a random opponent from same category
+  // Get a deterministic opponent from same category
   const opponents = allClubs.filter(c => c.category === club.category && c.id !== club.id)
-  const opponent = opponents.length > 0 ? opponents[Math.floor(Math.random() * opponents.length)] : null
+  const opponent = opponents.length > 0 ? opponents[0] : null
   const competitionName = club.category === "ligue1" ? "Ligue 1" : club.category === "ligue2" ? "Ligue 2" : "Navetanes"
   
   // Next match info
@@ -458,12 +491,17 @@ function AccueilScreen({ club, allClubs, userRole, isGuest, onLogin, onShowMyTic
 
       {/* Quick actions grid */}
       <div className="grid grid-cols-4 gap-2 sm:gap-3">
-        {[
+        {(userRole === "membre" || userRole === "joueur" || userRole === "staff" || userRole === "admin" ? [
+          { icon: Award, label: "Adhesion", action: "adhesion" as const },
+          { icon: Crown, label: "Premium", action: "premium" as const },
+          { icon: ShoppingBag, label: "Boutique", action: "boutique" as const },
+          { icon: Gift, label: "Soutenir", action: "don" as const },
+        ] : [
           { icon: Ticket, label: "Billets", action: "billets" as const },
           { icon: ShoppingBag, label: "Boutique", action: "boutique" as const },
           { icon: Gift, label: "Soutenir", action: "don" as const },
           { icon: BarChart3, label: "Stats", action: "stats" as const },
-        ].map((item) => (
+        ]).map((item) => (
           <button
             key={item.action}
             onClick={() => {
@@ -477,6 +515,10 @@ function AccueilScreen({ club, allClubs, userRole, isGuest, onLogin, onShowMyTic
                 onGoToTab("boutique")
               } else if (item.action === "don") {
                 onShowDonation()
+              } else if (item.action === "adhesion") {
+                onGoToTab("adhesion")
+              } else if (item.action === "premium") {
+                onGoToTab("premium")
               }
             }}
             className="flex flex-col items-center gap-1.5 p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-card border border-border hover:border-primary/30 transition-all"
@@ -2534,7 +2576,7 @@ function CheckoutScreen({ club, cart, onBack, onComplete }: {
 }
 
 // ============ PROFIL SCREEN ============
-function ProfilScreen({ club, userRole, isGuest, onLogin, onChangeClub, onLogout, onShowMyTickets, ticketCount }: { 
+function ProfilScreen({ club, userRole, isGuest, onLogin, onChangeClub, onLogout, onShowMyTickets, ticketCount, onRoleChange }: { 
   club: Club, 
   userRole: UserRole, 
   isGuest: boolean, 
@@ -2542,7 +2584,8 @@ function ProfilScreen({ club, userRole, isGuest, onLogin, onChangeClub, onLogout
   onChangeClub: () => void, 
   onLogout: () => void,
   onShowMyTickets: () => void,
-  ticketCount: number
+  ticketCount: number,
+  onRoleChange?: (role: UserRole) => void
 }) {
   if (isGuest) {
     return (
@@ -2641,6 +2684,28 @@ function ProfilScreen({ club, userRole, isGuest, onLogin, onChangeClub, onLogout
           </motion.button>
         ))}
       </div>
+
+      {/* Role switcher for testing */}
+      {onRoleChange && (
+        <div className="p-4 rounded-2xl bg-card border border-border">
+          <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wider">Changer de role (demo)</p>
+          <div className="flex flex-wrap gap-2">
+            {(["supporter", "membre", "joueur", "staff", "admin"] as UserRole[]).map((role) => (
+              <button
+                key={role}
+                onClick={() => onRoleChange(role)}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                style={{
+                  background: userRole === role ? club.primaryColor : "var(--muted)",
+                  color: userRole === role ? "white" : "var(--muted-foreground)",
+                }}
+              >
+                {role}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Logout */}
       <button 
