@@ -15,6 +15,7 @@ import { MembershipScreen } from "./screens/membership-screen"
 import { NotificationsScreen } from "./screens/notifications-screen"
 import { JoueurAccueilScreen, CalendrierJoueurScreen, TeamScreen, AnnouncementsScreen } from "./screens/joueur-screens"
 import { StaffEquipeScreen, StaffCalendrierScreen, StaffAnnouncementsScreen } from "./screens/staff-screens"
+import { AdminDashboardScreen, AdminMembersScreen, AdminContentScreen, AdminFinanceScreen, AdminSettingsScreen } from "./screens/admin-screens"
 
 // Types
 export interface Club {
@@ -80,7 +81,7 @@ interface ClubAppProps {
   onCheckoutStarted?: () => void
 }
 
-type TabId = "accueil" | "actu" | "agenda" | "boutique" | "profil" | "calendrier" | "equipe" | "annonces"
+type TabId = "accueil" | "actu" | "agenda" | "boutique" | "profil" | "calendrier" | "equipe" | "annonces" | "dashboard" | "membres" | "contenu" | "finance" | "settings"
 
 // Bottom navigation tabs - role-aware
 const getNavTabs = (userRole: UserRole) => {
@@ -98,6 +99,15 @@ const getNavTabs = (userRole: UserRole) => {
       { id: "calendrier" as TabId, label: "Calendrier", icon: Calendar },
       { id: "annonces" as TabId, label: "Annonces", icon: Megaphone },
       { id: "profil" as TabId, label: "Profil", icon: User },
+    ]
+  }
+  if (userRole === "admin") {
+    return [
+      { id: "dashboard" as TabId, label: "Board", icon: LayoutDashboard },
+      { id: "membres" as TabId, label: "Membres", icon: Users },
+      { id: "contenu" as TabId, label: "Contenu", icon: Newspaper },
+      { id: "finance" as TabId, label: "Finance", icon: BarChart3 },
+      { id: "settings" as TabId, label: "Reglages", icon: Settings },
     ]
   }
   return [
@@ -357,8 +367,24 @@ export function ClubApp({ club, allClubs, onBack, isGuest, userRole, userPhone, 
   {!showMyTickets && !showDonation && !showNotifications && !showMembership && !showAnnouncements && userRole === "staff" && activeTab === "annonces" && (
     <StaffAnnouncementsScreen key="staff-annonces" club={club} />
   )}
-  {/* DEFAULT TABS (all non-joueur/staff roles) */}
-  {!showMyTickets && !showDonation && !showNotifications && !showMembership && !showAnnouncements && userRole !== "joueur" && userRole !== "staff" && activeTab === "accueil" && (
+  {/* ADMIN-SPECIFIC TABS */}
+  {!showMyTickets && !showDonation && !showNotifications && !showMembership && !showAnnouncements && userRole === "admin" && activeTab === "dashboard" && (
+    <AdminDashboardScreen key="admin-dashboard" club={club} />
+  )}
+  {!showMyTickets && !showDonation && !showNotifications && !showMembership && !showAnnouncements && userRole === "admin" && activeTab === "membres" && (
+    <AdminMembersScreen key="admin-members" club={club} />
+  )}
+  {!showMyTickets && !showDonation && !showNotifications && !showMembership && !showAnnouncements && userRole === "admin" && activeTab === "contenu" && (
+    <AdminContentScreen key="admin-content" club={club} />
+  )}
+  {!showMyTickets && !showDonation && !showNotifications && !showMembership && !showAnnouncements && userRole === "admin" && activeTab === "finance" && (
+    <AdminFinanceScreen key="admin-finance" club={club} />
+  )}
+  {!showMyTickets && !showDonation && !showNotifications && !showMembership && !showAnnouncements && userRole === "admin" && activeTab === "settings" && (
+    <AdminSettingsScreen key="admin-settings" club={club} />
+  )}
+  {/* DEFAULT TABS (all non-joueur/staff/admin roles) */}
+  {!showMyTickets && !showDonation && !showNotifications && !showMembership && !showAnnouncements && userRole !== "joueur" && userRole !== "staff" && userRole !== "admin" && activeTab === "accueil" && (
             <AccueilScreen key="accueil" club={club} allClubs={allClubs} userRole={userRole} isGuest={isGuest} onLogin={onLogin} onShowMyTickets={() => setShowMyTickets(true)} onGoToTab={setActiveTab} onSelectMatch={(match) => { setSelectedMatch(match); setActiveTab("agenda"); }} onShowDonation={() => setShowDonation(true)} onShowMembership={() => setShowMembership(true)} />
           )}
             {!showMyTickets && !showDonation && !showNotifications && !showMembership && activeTab === "actu" && !selectedNews && (
@@ -2895,13 +2921,13 @@ function ProfilScreen({ club, userRole, isGuest, onLogin, onChangeClub, onLogout
     { icon: Megaphone, label: "Annonces internes", visible: userRole === "joueur", badge: "2", action: "announcements" },
     { icon: Users, label: "Gestion effectif", visible: userRole === "staff" },
     { icon: Clipboard, label: "Convocations", visible: userRole === "staff", badge: "2" },
-    { icon: Ticket, label: "Mes billets", visible: userRole !== "joueur" && userRole !== "staff", badge: ticketCount > 0 ? ticketCount.toString() : undefined, action: "mytickets" },
-    { icon: Heart, label: "Clubs suivis", badge: "3", visible: userRole !== "joueur" && userRole !== "staff" },
-    { icon: CreditCard, label: "Ma carte membre", visible: isMember && userRole !== "joueur" && userRole !== "staff", action: "membership" },
+    { icon: Ticket, label: "Mes billets", visible: userRole !== "joueur" && userRole !== "staff" && userRole !== "admin", badge: ticketCount > 0 ? ticketCount.toString() : undefined, action: "mytickets" },
+    { icon: Heart, label: "Clubs suivis", badge: "3", visible: userRole !== "joueur" && userRole !== "staff" && userRole !== "admin" },
+    { icon: CreditCard, label: "Ma carte membre", visible: isMember && userRole !== "joueur" && userRole !== "staff" && userRole !== "admin", action: "membership" },
     { icon: Bell, label: "Notifications", action: "notifications", badge: isMember ? "3" : undefined },
     { icon: RefreshCw, label: "Changer de club", action: "changeclub" },
     { icon: Settings, label: "Parametres" },
-    { icon: LayoutDashboard, label: "Tableau de bord", visible: userRole === "admin" },
+    { icon: LayoutDashboard, label: "Tableau de bord", visible: false },
   ].filter(item => item.visible !== false)
 
   return (
@@ -2921,12 +2947,15 @@ function ProfilScreen({ club, userRole, isGuest, onLogin, onChangeClub, onLogout
         </div>
         <div>
           <h2 className="font-bold text-foreground text-lg">Moussa Diallo</h2>
-          <p className="text-sm text-muted-foreground capitalize">{userRole === "staff" ? "Staff technique" : userRole} • {club.name}</p>
+          <p className="text-sm text-muted-foreground capitalize">{userRole === "staff" ? "Staff technique" : userRole === "admin" ? "Administrateur" : userRole} • {club.name}</p>
           {userRole === "joueur" && (
             <p className="text-xs text-muted-foreground mt-0.5">#10 - Milieu offensif</p>
           )}
           {userRole === "staff" && (
             <p className="text-xs text-muted-foreground mt-0.5">Entraineur principal</p>
+          )}
+          {userRole === "admin" && (
+            <p className="text-xs text-muted-foreground mt-0.5">Dirigeant du club</p>
           )}
         </div>
       </div>
