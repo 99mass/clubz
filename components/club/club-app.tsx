@@ -79,27 +79,17 @@ interface ClubAppProps {
   onCheckoutStarted?: () => void
 }
 
-type TabId = "accueil" | "actu" | "agenda" | "boutique" | "profil" | "adhesion" | "premium"
+type TabId = "accueil" | "actu" | "agenda" | "boutique" | "profil"
 
-// Bottom navigation tabs
-const getNavTabs = (role: UserRole) => {
-  if (role === "membre" || role === "joueur" || role === "staff" || role === "admin") {
-    return [
-      { id: "accueil" as TabId, label: "Accueil", icon: Home },
-      { id: "adhesion" as TabId, label: "Adhesion", icon: Award },
-      { id: "premium" as TabId, label: "Premium", icon: Crown },
-      { id: "boutique" as TabId, label: "Boutique", icon: ShoppingBag },
-      { id: "profil" as TabId, label: "Profil", icon: User },
-    ]
-  }
-  const baseTabs = [
+// Bottom navigation tabs - same for ALL roles
+const getNavTabs = () => {
+  return [
     { id: "accueil" as TabId, label: "Accueil", icon: Home },
     { id: "actu" as TabId, label: "Actu", icon: Newspaper },
     { id: "agenda" as TabId, label: "Agenda", icon: Calendar },
     { id: "boutique" as TabId, label: "Boutique", icon: ShoppingBag },
     { id: "profil" as TabId, label: "Profil", icon: User },
   ]
-  return baseTabs
 }
 
 export function ClubApp({ club, allClubs, onBack, isGuest, userRole, userPhone, onLogin, onChangeClub, onLogout, onRoleChange, initialCheckout, onCheckoutStarted }: ClubAppProps) {
@@ -117,6 +107,8 @@ export function ClubApp({ club, allClubs, onBack, isGuest, userRole, userPhone, 
   const [showMyTickets, setShowMyTickets] = useState(false)
   const [showDonation, setShowDonation] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
+  const [showMembership, setShowMembership] = useState(false)
+  const [showPremiumContent, setShowPremiumContent] = useState(false)
   const [purchasedTickets, setPurchasedTickets] = useState<PurchasedTicket[]>([
     // Sample purchased tickets - one scanned, one not
     {
@@ -206,7 +198,7 @@ export function ClubApp({ club, allClubs, onBack, isGuest, userRole, userPhone, 
     setSelectedMatch(null)
   }
   
-  const navTabs = getNavTabs(userRole)
+  const navTabs = getNavTabs()
 
   const handleFollow = () => {
     if (isGuest) {
@@ -293,67 +285,67 @@ export function ClubApp({ club, allClubs, onBack, isGuest, userRole, userPhone, 
       {/* Content area */}
       <div className="flex-1 overflow-y-auto pb-16">
         <AnimatePresence mode="wait">
-{/* Notifications Screen - shown on top of everything */}
+{/* Overlay Screens - shown on top of everything */}
+  {/* Notifications */}
   {showNotifications && (
     <NotificationsScreen key="notifications" club={club} userRole={userRole} onBack={() => setShowNotifications(false)} />
   )}
-
-{/* My Tickets Screen - shown on top of everything */}
-  {showMyTickets && !showNotifications && (
+  {/* Membership / Adhesion */}
+  {showMembership && !showNotifications && (
+    <MembershipScreen key="membership" club={club} userRole={userRole} isGuest={isGuest} onLogin={onLogin} onBack={() => setShowMembership(false)} />
+  )}
+  {/* Premium Content */}
+  {showPremiumContent && !showNotifications && !showMembership && (
+    <PremiumContentScreen key="premium" club={club} userRole={userRole} isGuest={isGuest} onLogin={onLogin} onBack={() => setShowPremiumContent(false)} />
+  )}
+  {/* My Tickets */}
+  {showMyTickets && !showNotifications && !showMembership && !showPremiumContent && (
     <MyTicketsScreen key="my-tickets" club={club} tickets={purchasedTickets} onBack={() => setShowMyTickets(false)} />
   )}
-  
-  {/* Donation Screen */}
-  {showDonation && !showNotifications && (
+  {/* Donation */}
+  {showDonation && !showNotifications && !showMembership && !showPremiumContent && (
     <DonationScreen key="donation" club={club} isGuest={isGuest} userPhone={userPhone} onBack={() => setShowDonation(false)} />
   )}
   
-{/* Regular screens - hidden when overlay screens are shown */}
-  {/* Member screens */}
-  {!showMyTickets && !showDonation && !showNotifications && activeTab === "adhesion" && (
-    <MembershipScreen key="adhesion" club={club} userRole={userRole} isGuest={isGuest} onLogin={onLogin} />
-  )}
-  {!showMyTickets && !showDonation && !showNotifications && activeTab === "premium" && (
-    <PremiumContentScreen key="premium" club={club} userRole={userRole} isGuest={isGuest} onLogin={onLogin} />
-  )}
-  {!showMyTickets && !showDonation && !showNotifications && activeTab === "accueil" && (
-            <AccueilScreen key="accueil" club={club} allClubs={allClubs} userRole={userRole} isGuest={isGuest} onLogin={onLogin} onShowMyTickets={() => setShowMyTickets(true)} onGoToTab={setActiveTab} onSelectMatch={(match) => { setSelectedMatch(match); setActiveTab("agenda"); }} onShowDonation={() => setShowDonation(true)} />
+{/* Regular tab screens - hidden when any overlay is active */}
+  {!showMyTickets && !showDonation && !showNotifications && !showMembership && !showPremiumContent && activeTab === "accueil" && (
+            <AccueilScreen key="accueil" club={club} allClubs={allClubs} userRole={userRole} isGuest={isGuest} onLogin={onLogin} onShowMyTickets={() => setShowMyTickets(true)} onGoToTab={setActiveTab} onSelectMatch={(match) => { setSelectedMatch(match); setActiveTab("agenda"); }} onShowDonation={() => setShowDonation(true)} onShowMembership={() => setShowMembership(true)} onShowPremiumContent={() => setShowPremiumContent(true)} />
           )}
-            {!showMyTickets && !showDonation && !showNotifications && activeTab === "actu" && !selectedNews && (
+            {!showMyTickets && !showDonation && !showNotifications && !showMembership && !showPremiumContent && activeTab === "actu" && !selectedNews && (
             <ActuScreen key="actu" club={club} onSelectNews={setSelectedNews} />
           )}
-          {!showMyTickets && !showDonation && !showNotifications && activeTab === "actu" && selectedNews && (
+          {!showMyTickets && !showDonation && !showNotifications && !showMembership && !showPremiumContent && activeTab === "actu" && selectedNews && (
             <NewsDetailScreen key="news-detail" club={club} news={selectedNews} onBack={() => setSelectedNews(null)} />
           )}
-          {!showMyTickets && !showDonation && !showNotifications && activeTab === "agenda" && !selectedMatch && !showTicketCheckout && (
+          {!showMyTickets && !showDonation && !showNotifications && !showMembership && !showPremiumContent && activeTab === "agenda" && !selectedMatch && !showTicketCheckout && (
             <AgendaScreen key="agenda" club={club} allClubs={allClubs} userRole={userRole} isGuest={isGuest} onLogin={onLogin} onSelectMatch={setSelectedMatch} />
           )}
-          {!showMyTickets && !showDonation && !showNotifications && activeTab === "agenda" && selectedMatch && !showTicketCheckout && (
+          {!showMyTickets && !showDonation && !showNotifications && !showMembership && !showPremiumContent && activeTab === "agenda" && selectedMatch && !showTicketCheckout && (
             <TicketSelectionScreen key="ticket-selection" club={club} match={selectedMatch} onBack={() => setSelectedMatch(null)} onProceed={(items) => { handleAddTickets(items); setShowTicketCheckout(true); }} isGuest={isGuest} onLogin={onLogin} />
           )}
-          {!showMyTickets && !showDonation && !showNotifications && activeTab === "agenda" && showTicketCheckout && (
+          {!showMyTickets && !showDonation && !showNotifications && !showMembership && !showPremiumContent && activeTab === "agenda" && showTicketCheckout && (
             <TicketCheckoutScreen key="ticket-checkout" club={club} match={selectedMatch!} tickets={ticketCart} onBack={() => setShowTicketCheckout(false)} onComplete={handleTicketCheckoutComplete} />
           )}
-          {!showMyTickets && !showDonation && !showNotifications && activeTab === "boutique" && !selectedProduct && !showCart && !showCheckout && (
+          {!showMyTickets && !showDonation && !showNotifications && !showMembership && !showPremiumContent && activeTab === "boutique" && !selectedProduct && !showCart && !showCheckout && (
             <BoutiqueScreen key="boutique" club={club} cart={cart} onSelectProduct={setSelectedProduct} onOpenCart={() => setShowCart(true)} />
           )}
-          {!showMyTickets && !showDonation && !showNotifications && activeTab === "boutique" && selectedProduct && !showCart && !showCheckout && (
+          {!showMyTickets && !showDonation && !showNotifications && !showMembership && !showPremiumContent && activeTab === "boutique" && selectedProduct && !showCart && !showCheckout && (
             <ProductDetailScreen key="product-detail" club={club} product={selectedProduct} onBack={() => setSelectedProduct(null)} onAddToCart={handleAddToCart} onBuyNow={handleBuyNow} />
           )}
-          {!showMyTickets && !showDonation && !showNotifications && activeTab === "boutique" && showCart && !showCheckout && (
+          {!showMyTickets && !showDonation && !showNotifications && !showMembership && !showPremiumContent && activeTab === "boutique" && showCart && !showCheckout && (
             <CartScreen key="cart" club={club} cart={cart} onBack={() => setShowCart(false)} onUpdateQuantity={handleUpdateQuantity} onRemoveItem={handleRemoveItem} onCheckout={() => setShowCheckout(true)} isGuest={isGuest} onLogin={onLogin} />
           )}
-          {!showMyTickets && !showDonation && !showNotifications && activeTab === "boutique" && showCheckout && (
+          {!showMyTickets && !showDonation && !showNotifications && !showMembership && !showPremiumContent && activeTab === "boutique" && showCheckout && (
             <CheckoutScreen key="checkout" club={club} cart={cart} onBack={() => setShowCheckout(false)} onComplete={handleCheckoutComplete} />
           )}
-          {!showMyTickets && !showDonation && !showNotifications && activeTab === "profil" && (
-            <ProfilScreen key="profil" club={club} userRole={userRole} isGuest={isGuest} onLogin={onLogin} onChangeClub={onChangeClub} onLogout={onLogout} onShowMyTickets={() => setShowMyTickets(true)} ticketCount={purchasedTickets.filter(t => t.status === "upcoming").length} onRoleChange={onRoleChange} />
+          {!showMyTickets && !showDonation && !showNotifications && !showMembership && !showPremiumContent && activeTab === "profil" && (
+            <ProfilScreen key="profil" club={club} userRole={userRole} isGuest={isGuest} onLogin={onLogin} onChangeClub={onChangeClub} onLogout={onLogout} onShowMyTickets={() => setShowMyTickets(true)} ticketCount={purchasedTickets.filter(t => t.status === "upcoming").length} onRoleChange={onRoleChange} onShowMembership={() => setShowMembership(true)} onShowPremiumContent={() => setShowPremiumContent(true)} onShowNotifications={() => setShowNotifications(true)} />
           )}
         </AnimatePresence>
       </div>
 
       {/* Bottom Navigation - hidden on detail screens */}
-      {!selectedProduct && !showCart && !showCheckout && !selectedNews && !selectedMatch && !showTicketCheckout && !showMyTickets && !showDonation && !showNotifications && (
+      {!selectedProduct && !showCart && !showCheckout && !selectedNews && !selectedMatch && !showTicketCheckout && !showMyTickets && !showDonation && !showNotifications && !showMembership && !showPremiumContent && (
         <div className="fixed bottom-0 inset-x-0 bg-background/95 backdrop-blur-sm border-t border-border safe-area-bottom">
           <div className="flex items-center justify-around px-2 py-1.5 max-w-md mx-auto">
             {navTabs.map((tab) => (
@@ -392,7 +384,7 @@ export function ClubApp({ club, allClubs, onBack, isGuest, userRole, userPhone, 
 }
 
 // ============ ACCUEIL SCREEN ============
-function AccueilScreen({ club, allClubs, userRole, isGuest, onLogin, onShowMyTickets, onGoToTab, onSelectMatch, onShowDonation }: { 
+function AccueilScreen({ club, allClubs, userRole, isGuest, onLogin, onShowMyTickets, onGoToTab, onSelectMatch, onShowDonation, onShowMembership, onShowPremiumContent }: { 
   club: Club, 
   allClubs: Club[], 
   userRole: UserRole, 
@@ -401,7 +393,9 @@ function AccueilScreen({ club, allClubs, userRole, isGuest, onLogin, onShowMyTic
   onShowMyTickets: () => void,
   onGoToTab: (tab: TabId) => void,
   onSelectMatch: (match: MatchInfo) => void,
-  onShowDonation: () => void
+  onShowDonation: () => void,
+  onShowMembership: () => void,
+  onShowPremiumContent: () => void,
 }) {
   // Get a deterministic opponent from same category
   const opponents = allClubs.filter(c => c.category === club.category && c.id !== club.id)
@@ -516,9 +510,9 @@ function AccueilScreen({ club, allClubs, userRole, isGuest, onLogin, onShowMyTic
               } else if (item.action === "don") {
                 onShowDonation()
               } else if (item.action === "adhesion") {
-                onGoToTab("adhesion")
+                onShowMembership()
               } else if (item.action === "premium") {
-                onGoToTab("premium")
+                onShowPremiumContent()
               }
             }}
             className="flex flex-col items-center gap-1.5 p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-card border border-border hover:border-primary/30 transition-all"
@@ -565,26 +559,32 @@ function AccueilScreen({ club, allClubs, userRole, isGuest, onLogin, onShowMyTic
         </div>
       </div>
 
-      {/* Membership card for members */}
+      {/* Membership card for members -- tappable to open full membership screen */}
       {(userRole === "membre" || userRole === "joueur" || userRole === "staff" || userRole === "admin") && (
-        <div 
-          className="rounded-2xl p-5 text-white relative overflow-hidden"
+        <button 
+          onClick={onShowMembership}
+          className="w-full text-left rounded-2xl p-5 text-white relative overflow-hidden transition-transform active:scale-[0.98]"
           style={{ background: `linear-gradient(135deg, ${club.primaryColor}, ${club.secondaryColor})` }}
         >
           <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-white/10 -translate-y-1/2 translate-x-1/2" />
-          <p className="text-xs font-medium opacity-80 mb-1">Carte Membre</p>
-          <p className="text-lg font-bold mb-3">Moussa Diallo</p>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-1 relative z-10">
+            <p className="text-xs font-medium opacity-80">Carte Membre</p>
+            <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-white/20 text-white">
+              Silver
+            </span>
+          </div>
+          <p className="text-lg font-bold mb-3 relative z-10">Moussa Diallo</p>
+          <div className="flex items-center justify-between relative z-10">
             <div>
               <p className="text-xs opacity-80">Membre depuis</p>
               <p className="font-semibold">Jan 2024</p>
             </div>
             <div className="text-right">
-              <p className="text-xs opacity-80">Statut</p>
-              <p className="font-semibold capitalize">{userRole}</p>
+              <p className="text-xs opacity-80">Voir ma carte</p>
+              <ChevronRight className="w-5 h-5 text-white/80 ml-auto" />
             </div>
           </div>
-        </div>
+        </button>
       )}
     </motion.div>
   )
@@ -2576,7 +2576,7 @@ function CheckoutScreen({ club, cart, onBack, onComplete }: {
 }
 
 // ============ PROFIL SCREEN ============
-function ProfilScreen({ club, userRole, isGuest, onLogin, onChangeClub, onLogout, onShowMyTickets, ticketCount, onRoleChange }: { 
+function ProfilScreen({ club, userRole, isGuest, onLogin, onChangeClub, onLogout, onShowMyTickets, ticketCount, onRoleChange, onShowMembership, onShowPremiumContent, onShowNotifications }: { 
   club: Club, 
   userRole: UserRole, 
   isGuest: boolean, 
@@ -2585,7 +2585,10 @@ function ProfilScreen({ club, userRole, isGuest, onLogin, onChangeClub, onLogout
   onLogout: () => void,
   onShowMyTickets: () => void,
   ticketCount: number,
-  onRoleChange?: (role: UserRole) => void
+  onRoleChange?: (role: UserRole) => void,
+  onShowMembership: () => void,
+  onShowPremiumContent: () => void,
+  onShowNotifications: () => void,
 }) {
   if (isGuest) {
     return (
@@ -2616,12 +2619,15 @@ function ProfilScreen({ club, userRole, isGuest, onLogin, onChangeClub, onLogout
     )
   }
 
+  const isMember = userRole === "membre" || userRole === "joueur" || userRole === "staff" || userRole === "admin"
+
   const menuItems: { icon: typeof Ticket, label: string, badge?: string, visible?: boolean, action?: string }[] = [
     { icon: Ticket, label: "Mes billets", badge: ticketCount > 0 ? ticketCount.toString() : undefined, action: "mytickets" },
     { icon: Heart, label: "Clubs suivis", badge: "3" },
-    { icon: CreditCard, label: "Ma carte membre", visible: userRole !== "supporter" },
+    { icon: CreditCard, label: "Ma carte membre", visible: isMember, action: "membership" },
+    { icon: Crown, label: "Contenu premium", visible: isMember, action: "premium" },
+    { icon: Bell, label: "Notifications", action: "notifications", badge: isMember ? "3" : undefined },
     { icon: RefreshCw, label: "Changer de club", action: "changeclub" },
-    { icon: Bell, label: "Notifications" },
     { icon: Settings, label: "Parametres" },
     { icon: LayoutDashboard, label: "Tableau de bord", visible: userRole === "admin" || userRole === "staff" },
   ].filter(item => item.visible !== false)
@@ -2658,6 +2664,9 @@ function ProfilScreen({ club, userRole, isGuest, onLogin, onChangeClub, onLogout
             onClick={() => {
               if (item.action === "mytickets") onShowMyTickets()
               else if (item.action === "changeclub") onChangeClub()
+              else if (item.action === "membership") onShowMembership()
+              else if (item.action === "premium") onShowPremiumContent()
+              else if (item.action === "notifications") onShowNotifications()
             }}
             className="w-full flex items-center justify-between p-4 rounded-2xl bg-card border border-border hover:border-primary/30 transition-all"
           >

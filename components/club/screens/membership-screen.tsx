@@ -4,7 +4,7 @@ import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   CreditCard, Award, Calendar, ChevronRight, Check,
-  Clock, Star, Shield, X, ArrowUpRight
+  Clock, Star, Shield, X, ArrowUpRight, ArrowLeft
 } from "lucide-react"
 import type { Club, UserRole } from "../club-app"
 
@@ -42,6 +42,7 @@ interface MembershipScreenProps {
   userRole: UserRole
   isGuest: boolean
   onLogin: () => void
+  onBack?: () => void
 }
 
 // Membership tiers data
@@ -109,7 +110,7 @@ const mockPaymentHistory: PaymentHistory[] = [
   { id: "PAY-003", date: "10 Dec 2023", amount: 5000, type: "Cotisation Bronze", method: "Wave", status: "success" },
 ]
 
-export function MembershipScreen({ club, userRole, isGuest, onLogin }: MembershipScreenProps) {
+export function MembershipScreen({ club, userRole, isGuest, onLogin, onBack }: MembershipScreenProps) {
   const [showDigitalCard, setShowDigitalCard] = useState(false)
   const [showTierUpgrade, setShowTierUpgrade] = useState(false)
   const [activeSection, setActiveSection] = useState<"card" | "status" | "history">("card")
@@ -127,9 +128,22 @@ export function MembershipScreen({ club, userRole, isGuest, onLogin }: Membershi
       exit={{ opacity: 0 }}
       className="p-4 space-y-5 pb-20"
     >
+      {/* Header with back */}
+      {onBack && (
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onBack}
+            className="w-9 h-9 rounded-full border border-border flex items-center justify-center"
+          >
+            <ArrowLeft className="w-5 h-5 text-foreground" />
+          </button>
+          <h2 className="font-bold text-foreground text-lg">Mon adhesion</h2>
+        </div>
+      )}
+
       {/* Section Title */}
       <div className="flex items-center justify-between">
-        <h2 className="font-bold text-foreground text-lg">Mon adhesion</h2>
+        {!onBack && <h2 className="font-bold text-foreground text-lg">Mon adhesion</h2>}
         <span
           className="px-2.5 py-1 rounded-full text-[10px] font-bold text-white"
           style={{ background: membership.tier.color }}

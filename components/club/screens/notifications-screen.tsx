@@ -4,7 +4,7 @@ import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   Bell, BellRing, Check, Ticket, Crown, Users, Calendar,
-  Gift, Megaphone, X, ChevronRight
+  Gift, Megaphone, X, ChevronRight, ArrowLeft
 } from "lucide-react"
 import type { Club, UserRole } from "../club-app"
 
@@ -21,6 +21,7 @@ interface Notification {
 interface NotificationsScreenProps {
   club: Club
   userRole: UserRole
+  onBack?: () => void
 }
 
 const notificationIcons: Record<string, typeof Bell> = {
@@ -107,7 +108,7 @@ const mockNotifications: Notification[] = [
   },
 ]
 
-export function NotificationsScreen({ club, userRole }: NotificationsScreenProps) {
+export function NotificationsScreen({ club, userRole, onBack }: NotificationsScreenProps) {
   const [notifications, setNotifications] = useState(mockNotifications)
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null)
   const [activeFilter, setActiveFilter] = useState<string>("all")
@@ -154,6 +155,14 @@ export function NotificationsScreen({ club, userRole }: NotificationsScreenProps
       <div className="p-4 pb-2">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="w-9 h-9 rounded-full border border-border flex items-center justify-center"
+              >
+                <ArrowLeft className="w-5 h-5 text-foreground" />
+              </button>
+            )}
             <BellRing className="w-5 h-5" style={{ color: club.primaryColor }} />
             <h2 className="font-bold text-foreground text-lg">Notifications</h2>
             {unreadCount > 0 && (

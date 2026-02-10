@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
-  Lock, Crown, Heart, Share2, Play, ArrowLeft, Eye, Clock, Star, X
+  Lock, Crown, Heart, Share2, Play, ArrowLeft, Eye, Clock, Star, X, ChevronLeft
 } from "lucide-react"
 import Image from "next/image"
 import type { Club, UserRole } from "../club-app"
@@ -27,6 +27,7 @@ interface PremiumContentScreenProps {
   userRole: UserRole
   isGuest: boolean
   onLogin: () => void
+  onBack?: () => void
 }
 
 const premiumPosts: PremiumPost[] = [
@@ -111,7 +112,7 @@ const categoryColors: Record<string, string> = {
   coulisses: "#8B5CF6",
 }
 
-export function PremiumContentScreen({ club, userRole, isGuest, onLogin }: PremiumContentScreenProps) {
+export function PremiumContentScreen({ club, userRole, isGuest, onLogin, onBack }: PremiumContentScreenProps) {
   const [likedPosts, setLikedPosts] = useState<number[]>([])
   const [selectedPost, setSelectedPost] = useState<PremiumPost | null>(null)
   const [activeFilter, setActiveFilter] = useState<string>("all")
@@ -148,6 +149,14 @@ export function PremiumContentScreen({ club, userRole, isGuest, onLogin }: Premi
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="w-9 h-9 rounded-full border border-border flex items-center justify-center"
+            >
+              <ArrowLeft className="w-5 h-5 text-foreground" />
+            </button>
+          )}
           <Crown className="w-5 h-5" style={{ color: "#FFD700" }} />
           <h2 className="font-bold text-foreground text-lg">Contenu premium</h2>
         </div>
