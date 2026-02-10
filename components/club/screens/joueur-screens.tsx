@@ -3,10 +3,10 @@
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
-  ArrowLeft, Bell, Calendar, ChevronRight, Clock, MapPin,
+  ArrowLeft, Calendar, ChevronRight, Clock, MapPin,
   Trophy, Users, Activity, Target, Flame, Shield,
   Megaphone, Check, X, Dumbbell, Shirt, Heart,
-  TrendingUp, Star, Zap, User, AlertCircle, Ticket
+  TrendingUp, Star, Zap, AlertCircle, Ruler, Weight, Footprints, Award
 } from "lucide-react"
 import Image from "next/image"
 import type { Club, UserRole } from "../club-app"
@@ -43,8 +43,19 @@ interface Teammate {
   position: string
   number: number
   avatar: string
+  profileImage: string
   isCapitain?: boolean
   isSelf?: boolean
+  age?: number
+  height?: string
+  weight?: string
+  foot?: string
+  nationality?: string
+  goals?: number
+  assists?: number
+  matches?: number
+  rating?: number
+  careerClubs?: { club: string; years: string; matches: number; goals: number }[]
 }
 
 interface StaffMember {
@@ -52,6 +63,9 @@ interface StaffMember {
   name: string
   role: string
   avatar: string
+  profileImage: string
+  experience?: string
+  specialty?: string
 }
 
 interface InternalAnnouncement {
@@ -88,29 +102,29 @@ const calendarEvents: TrainingSession[] = [
 ]
 
 const teammates: Teammate[] = [
-  { id: 1, name: "Moussa Diallo", position: "Milieu offensif", number: 10, avatar: "MD", isSelf: true },
-  { id: 2, name: "Abdoulaye Sow", position: "Gardien", number: 1, avatar: "AS", isCapitain: true },
-  { id: 3, name: "Ibrahima Ndiaye", position: "Defenseur central", number: 4, avatar: "IN" },
-  { id: 4, name: "Cheikh Mbaye", position: "Defenseur central", number: 5, avatar: "CM" },
-  { id: 5, name: "Pape Diop", position: "Lateral droit", number: 2, avatar: "PD" },
-  { id: 6, name: "Mamadou Fall", position: "Lateral gauche", number: 3, avatar: "MF" },
-  { id: 7, name: "Ousmane Ba", position: "Milieu defensif", number: 6, avatar: "OB" },
-  { id: 8, name: "Aliou Cisse", position: "Milieu central", number: 8, avatar: "AC" },
-  { id: 9, name: "Babacar Gueye", position: "Ailier droit", number: 7, avatar: "BG" },
-  { id: 10, name: "Modou Sarr", position: "Ailier gauche", number: 11, avatar: "MS" },
-  { id: 11, name: "El Hadj Diouf", position: "Attaquant", number: 9, avatar: "ED" },
-  { id: 12, name: "Seydou Niang", position: "Milieu central", number: 14, avatar: "SN" },
-  { id: 13, name: "Amadou Diagne", position: "Defenseur", number: 15, avatar: "AD" },
-  { id: 14, name: "Lamine Toure", position: "Attaquant", number: 17, avatar: "LT" },
-  { id: 15, name: "Khadim Faye", position: "Gardien", number: 16, avatar: "KF" },
+  { id: 1, name: "Moussa Diallo", position: "Milieu offensif", number: 10, avatar: "MD", profileImage: "/images/players/player-01.jpg", isSelf: true, age: 24, height: "1m78", weight: "72kg", foot: "Droit", nationality: "Senegalais", goals: 7, assists: 4, matches: 18, rating: 7.2, careerClubs: [{ club: "ASC Jaraaf", years: "2023-present", matches: 42, goals: 14 }, { club: "US Goree", years: "2021-2023", matches: 38, goals: 8 }, { club: "Academie Diambars", years: "2018-2021", matches: 52, goals: 11 }] },
+  { id: 2, name: "Abdoulaye Sow", position: "Gardien", number: 1, avatar: "AS", profileImage: "/images/players/player-02.jpg", isCapitain: true, age: 28, height: "1m88", weight: "82kg", foot: "Droit", nationality: "Senegalais", goals: 0, assists: 0, matches: 22, rating: 7.5, careerClubs: [{ club: "ASC Jaraaf", years: "2020-present", matches: 95, goals: 0 }, { club: "Ndiambour", years: "2017-2020", matches: 65, goals: 0 }] },
+  { id: 3, name: "Ibrahima Ndiaye", position: "Defenseur central", number: 4, avatar: "IN", profileImage: "/images/players/player-03.jpg", age: 26, height: "1m85", weight: "80kg", foot: "Gauche", nationality: "Senegalais", goals: 1, assists: 0, matches: 20, rating: 7.0 },
+  { id: 4, name: "Cheikh Mbaye", position: "Defenseur central", number: 5, avatar: "CM", profileImage: "/images/players/player-04.jpg", age: 25, height: "1m83", weight: "78kg", foot: "Droit", nationality: "Senegalais", goals: 2, assists: 1, matches: 19, rating: 6.8 },
+  { id: 5, name: "Pape Diop", position: "Lateral droit", number: 2, avatar: "PD", profileImage: "/images/players/player-05.jpg", age: 23, height: "1m75", weight: "70kg", foot: "Droit", nationality: "Senegalais", goals: 0, assists: 5, matches: 17, rating: 6.9 },
+  { id: 6, name: "Mamadou Fall", position: "Lateral gauche", number: 3, avatar: "MF", profileImage: "/images/players/player-06.jpg", age: 22, height: "1m77", weight: "71kg", foot: "Gauche", nationality: "Senegalais", goals: 1, assists: 3, matches: 16, rating: 6.7 },
+  { id: 7, name: "Ousmane Ba", position: "Milieu defensif", number: 6, avatar: "OB", profileImage: "/images/players/player-07.jpg", age: 27, height: "1m80", weight: "76kg", foot: "Droit", nationality: "Senegalais", goals: 1, assists: 2, matches: 21, rating: 7.1 },
+  { id: 8, name: "Aliou Cisse", position: "Milieu central", number: 8, avatar: "AC", profileImage: "/images/players/player-03.jpg", age: 24, height: "1m76", weight: "73kg", foot: "Droit", nationality: "Senegalais", goals: 3, assists: 4, matches: 18, rating: 7.0 },
+  { id: 9, name: "Babacar Gueye", position: "Ailier droit", number: 7, avatar: "BG", profileImage: "/images/players/player-05.jpg", age: 21, height: "1m73", weight: "68kg", foot: "Droit", nationality: "Senegalais", goals: 5, assists: 3, matches: 17, rating: 7.3 },
+  { id: 10, name: "Modou Sarr", position: "Ailier gauche", number: 11, avatar: "MS", profileImage: "/images/players/player-06.jpg", age: 22, height: "1m74", weight: "69kg", foot: "Gauche", nationality: "Senegalais", goals: 4, assists: 6, matches: 19, rating: 7.1 },
+  { id: 11, name: "El Hadj Diouf", position: "Attaquant", number: 9, avatar: "ED", profileImage: "/images/players/player-07.jpg", age: 26, height: "1m82", weight: "77kg", foot: "Droit", nationality: "Senegalais", goals: 12, assists: 2, matches: 20, rating: 7.6 },
+  { id: 12, name: "Seydou Niang", position: "Milieu central", number: 14, avatar: "SN", profileImage: "/images/players/player-04.jpg", age: 23, height: "1m79", weight: "74kg", foot: "Droit", nationality: "Senegalais", goals: 2, assists: 1, matches: 12, rating: 6.5 },
+  { id: 13, name: "Amadou Diagne", position: "Defenseur", number: 15, avatar: "AD", profileImage: "/images/players/player-02.jpg", age: 21, height: "1m86", weight: "79kg", foot: "Droit", nationality: "Senegalais", goals: 0, assists: 0, matches: 8, rating: 6.3 },
+  { id: 14, name: "Lamine Toure", position: "Attaquant", number: 17, avatar: "LT", profileImage: "/images/players/player-01.jpg", age: 20, height: "1m80", weight: "73kg", foot: "Gauche", nationality: "Senegalais", goals: 3, assists: 1, matches: 10, rating: 6.8 },
+  { id: 15, name: "Khadim Faye", position: "Gardien", number: 16, avatar: "KF", profileImage: "/images/players/player-03.jpg", age: 20, height: "1m90", weight: "83kg", foot: "Droit", nationality: "Senegalais", goals: 0, assists: 0, matches: 2, rating: 6.0 },
 ]
 
 const staffMembers: StaffMember[] = [
-  { id: 1, name: "Coach Malick Daf", role: "Entraineur principal", avatar: "MD" },
-  { id: 2, name: "Lamine Diatta", role: "Entraineur adjoint", avatar: "LD" },
-  { id: 3, name: "Dr. Souleymane Ba", role: "Medecin du club", avatar: "SB" },
-  { id: 4, name: "Pape Samba Ndiaye", role: "Preparateur physique", avatar: "PN" },
-  { id: 5, name: "Ibou Kebe", role: "Entraineur des gardiens", avatar: "IK" },
+  { id: 1, name: "Coach Malick Daf", role: "Entraineur principal", avatar: "MD", profileImage: "/images/players/coach-01.jpg", experience: "15 ans", specialty: "Tactique et strategie" },
+  { id: 2, name: "Lamine Diatta", role: "Entraineur adjoint", avatar: "LD", profileImage: "/images/players/player-06.jpg", experience: "10 ans", specialty: "Preparation offensive" },
+  { id: 3, name: "Dr. Souleymane Ba", role: "Medecin du club", avatar: "SB", profileImage: "/images/players/player-04.jpg", experience: "12 ans", specialty: "Medecine du sport" },
+  { id: 4, name: "Pape Samba Ndiaye", role: "Preparateur physique", avatar: "PN", profileImage: "/images/players/player-07.jpg", experience: "8 ans", specialty: "Condition physique" },
+  { id: 5, name: "Ibou Kebe", role: "Entraineur des gardiens", avatar: "IK", profileImage: "/images/players/player-02.jpg", experience: "6 ans", specialty: "Gardiens de but" },
 ]
 
 const internalAnnouncements: InternalAnnouncement[] = [
@@ -267,17 +281,6 @@ export function JoueurAccueilScreen({ club, allClubs, onShowNotifications, onSho
           className="object-cover"
         />
         <div className="absolute inset-0" style={{ background: `linear-gradient(to top, ${club.primaryColor}, transparent 70%)` }} />
-        
-        {/* Top actions */}
-        <div className="absolute top-3 right-3 flex items-center gap-2 z-10">
-          <button
-            onClick={onShowNotifications}
-            className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center relative"
-          >
-            <Bell className="w-5 h-5 text-white" />
-            <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center">3</span>
-          </button>
-        </div>
 
         {/* Player info overlay */}
         <div className="absolute bottom-0 left-0 right-0 p-4 z-10">
@@ -297,7 +300,7 @@ export function JoueurAccueilScreen({ club, allClubs, onShowNotifications, onSho
         </div>
       </div>
 
-      {/* Stats bar - glassmorphism style */}
+      {/* Stats bar */}
       <div className="px-4 -mt-4 relative z-10">
         <div
           className="rounded-2xl p-3 grid grid-cols-4 gap-2 border border-border shadow-lg"
@@ -336,7 +339,7 @@ export function JoueurAccueilScreen({ club, allClubs, onShowNotifications, onSho
         </div>
       )}
 
-      {/* Announcements section with image accent */}
+      {/* Announcements section */}
       <div className="px-4">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
@@ -524,7 +527,6 @@ export function CalendrierJoueurScreen({ club, allClubs }: { club: Club; allClub
         </h3>
         <div className="space-y-3">
           {upcomingEvents.map((event, index) => {
-            // Match events use the full match card
             if (event.type === "match") {
               return (
                 <motion.div
@@ -539,7 +541,6 @@ export function CalendrierJoueurScreen({ club, allClubs }: { club: Club; allClub
                 </motion.div>
               )
             }
-            // Non-match events
             const Icon = eventTypeIcons[event.type]
             const color = eventTypeColors[event.type]
             return (
@@ -671,7 +672,6 @@ function EventDetailSheet({ club, allClubs, event, onClose }: { club: Club; allC
             </button>
           </div>
 
-          {/* Match card inside detail sheet */}
           {event.type === "match" && (
             <MatchCard club={club} allClubs={allClubs} event={event} />
           )}
@@ -724,9 +724,298 @@ function EventDetailSheet({ club, allClubs, event, onClose }: { club: Club; allC
   )
 }
 
+// ============ PLAYER DETAIL BOTTOM SHEET ============
+function PlayerDetailSheet({ player, club, onClose }: { player: Teammate; club: Club; onClose: () => void }) {
+  const [activeTab, setActiveTab] = useState<"profil" | "stats" | "parcours">("profil")
+
+  return (
+    <>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="fixed inset-0 bg-black/60 z-50"
+      />
+      <motion.div
+        initial={{ y: "100%" }}
+        animate={{ y: 0 }}
+        exit={{ y: "100%" }}
+        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+        className="fixed bottom-0 inset-x-0 bg-background rounded-t-3xl z-50 max-h-[88vh] overflow-y-auto"
+      >
+        <div className="flex justify-center pt-3 pb-2">
+          <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
+        </div>
+
+        {/* Player header with image */}
+        <div className="relative px-5 pb-4">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-4">
+              <div
+                className="w-20 h-20 rounded-2xl overflow-hidden shadow-lg border-2 flex-shrink-0"
+                style={{ borderColor: club.primaryColor }}
+              >
+                <Image
+                  src={player.profileImage}
+                  alt={player.name}
+                  width={80}
+                  height={80}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-lg font-bold text-foreground">{player.name}</h3>
+                  {player.isCapitain && (
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-600">CAP</span>
+                  )}
+                  {player.isSelf && (
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md text-white" style={{ background: club.primaryColor }}>Vous</span>
+                  )}
+                </div>
+                <p className="text-sm text-muted-foreground">{player.position}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <span
+                    className="text-xs font-bold px-2 py-0.5 rounded-full"
+                    style={{ background: `${club.primaryColor}15`, color: club.primaryColor }}
+                  >
+                    #{player.number}
+                  </span>
+                  {player.nationality && (
+                    <span className="text-xs text-muted-foreground">{player.nationality}</span>
+                  )}
+                </div>
+              </div>
+            </div>
+            <button onClick={onClose} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center mt-1">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* Tab switcher */}
+        <div className="px-5 mb-4">
+          <div className="flex gap-1 p-1 bg-muted rounded-xl">
+            {(["profil", "stats", "parcours"] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className="flex-1 py-2 rounded-lg text-xs font-semibold transition-all capitalize"
+                style={{
+                  background: activeTab === tab ? "var(--background)" : "transparent",
+                  color: activeTab === tab ? club.primaryColor : "var(--muted-foreground)",
+                  boxShadow: activeTab === tab ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+                }}
+              >
+                {tab === "profil" ? "Profil" : tab === "stats" ? "Statistiques" : "Parcours"}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Tab content */}
+        <div className="px-5 pb-8">
+          <AnimatePresence mode="wait">
+            {activeTab === "profil" && (
+              <motion.div
+                key="profil"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                className="space-y-4"
+              >
+                <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Caracteristiques physiques</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { icon: Ruler, label: "Taille", value: player.height || "-", color: "#3B82F6" },
+                    { icon: Weight, label: "Poids", value: player.weight || "-", color: "#EF4444" },
+                    { icon: Footprints, label: "Pied fort", value: player.foot || "-", color: "#10B981" },
+                    { icon: Calendar, label: "Age", value: player.age ? `${player.age} ans` : "-", color: "#F59E0B" },
+                  ].map((item) => (
+                    <div key={item.label} className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border">
+                      <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${item.color}12` }}>
+                        <item.icon className="w-4 h-4" style={{ color: item.color }} />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">{item.label}</p>
+                        <p className="text-sm font-bold text-foreground">{item.value}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider pt-2">Informations</h4>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-card border border-border">
+                    <span className="text-sm text-muted-foreground">Poste</span>
+                    <span className="text-sm font-semibold text-foreground">{player.position}</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-card border border-border">
+                    <span className="text-sm text-muted-foreground">Numero</span>
+                    <span className="text-sm font-semibold text-foreground">#{player.number}</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-card border border-border">
+                    <span className="text-sm text-muted-foreground">Nationalite</span>
+                    <span className="text-sm font-semibold text-foreground">{player.nationality || "-"}</span>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {activeTab === "stats" && (
+              <motion.div
+                key="stats"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                className="space-y-4"
+              >
+                <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Saison en cours</h4>
+                
+                {/* Rating big display */}
+                {player.rating && (
+                  <div className="flex items-center justify-center py-4">
+                    <div className="relative">
+                      <div
+                        className="w-24 h-24 rounded-full flex items-center justify-center border-4"
+                        style={{ borderColor: player.rating >= 7 ? "#10B981" : player.rating >= 6 ? "#F59E0B" : "#EF4444" }}
+                      >
+                        <div className="text-center">
+                          <p className="text-2xl font-bold text-foreground">{player.rating.toFixed(1)}</p>
+                          <p className="text-[10px] text-muted-foreground">Note moy.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { icon: Shield, label: "Matchs joues", value: player.matches ?? 0, color: club.primaryColor },
+                    { icon: Target, label: "Buts", value: player.goals ?? 0, color: "#EF4444" },
+                    { icon: Zap, label: "Passes dec.", value: player.assists ?? 0, color: "#F59E0B" },
+                    { icon: Star, label: "Titularisations", value: Math.max(0, (player.matches ?? 0) - 3), color: "#8B5CF6" },
+                  ].map((stat) => (
+                    <div key={stat.label} className="p-3.5 rounded-xl bg-card border border-border">
+                      <div className="flex items-center gap-2 mb-2">
+                        <stat.icon className="w-4 h-4" style={{ color: stat.color }} />
+                        <span className="text-xs text-muted-foreground">{stat.label}</span>
+                      </div>
+                      <p className="text-2xl font-bold text-foreground">{stat.value}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Performance bar */}
+                <div className="p-4 rounded-xl bg-card border border-border">
+                  <h4 className="text-xs font-semibold text-muted-foreground mb-3">Performance globale</h4>
+                  {[
+                    { label: "Attaque", value: 75, color: "#EF4444" },
+                    { label: "Creation", value: 68, color: "#F59E0B" },
+                    { label: "Endurance", value: 82, color: "#10B981" },
+                    { label: "Discipline", value: 90, color: "#3B82F6" },
+                  ].map((bar) => (
+                    <div key={bar.label} className="mb-3 last:mb-0">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs text-foreground">{bar.label}</span>
+                        <span className="text-xs font-bold" style={{ color: bar.color }}>{bar.value}%</span>
+                      </div>
+                      <div className="h-2 rounded-full bg-muted overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${bar.value}%` }}
+                          transition={{ duration: 0.8, ease: "easeOut" }}
+                          className="h-full rounded-full"
+                          style={{ background: bar.color }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
+            {activeTab === "parcours" && (
+              <motion.div
+                key="parcours"
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 10 }}
+                className="space-y-4"
+              >
+                <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Parcours en club</h4>
+                
+                {player.careerClubs && player.careerClubs.length > 0 ? (
+                  <div className="relative">
+                    {/* Timeline line */}
+                    <div className="absolute left-5 top-8 bottom-8 w-0.5 bg-border" />
+                    
+                    <div className="space-y-4">
+                      {player.careerClubs.map((career, index) => (
+                        <motion.div
+                          key={career.club}
+                          initial={{ opacity: 0, y: 15 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          className="relative flex items-start gap-4"
+                        >
+                          {/* Timeline dot */}
+                          <div
+                            className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 z-10 border-2"
+                            style={{
+                              background: index === 0 ? club.primaryColor : "var(--card)",
+                              borderColor: index === 0 ? club.primaryColor : "var(--border)",
+                            }}
+                          >
+                            <Award className="w-4 h-4" style={{ color: index === 0 ? "white" : "var(--muted-foreground)" }} />
+                          </div>
+                          
+                          <div className="flex-1 p-3.5 rounded-xl bg-card border border-border">
+                            <div className="flex items-center justify-between mb-1">
+                              <h4 className="font-bold text-foreground text-sm">{career.club}</h4>
+                              {index === 0 && (
+                                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full text-white" style={{ background: club.primaryColor }}>Actuel</span>
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground mb-2">{career.years}</p>
+                            <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-1">
+                                <Shield className="w-3 h-3 text-muted-foreground" />
+                                <span className="text-xs font-semibold text-foreground">{career.matches}</span>
+                                <span className="text-[10px] text-muted-foreground">matchs</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Target className="w-3 h-3 text-muted-foreground" />
+                                <span className="text-xs font-semibold text-foreground">{career.goals}</span>
+                                <span className="text-[10px] text-muted-foreground">buts</span>
+                              </div>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="py-8 text-center">
+                    <Award className="w-10 h-10 text-muted-foreground/30 mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">Parcours non disponible</p>
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </motion.div>
+    </>
+  )
+}
+
 // ============ TEAM SCREEN ============
 export function TeamScreen({ club }: { club: Club }) {
   const [activeSection, setActiveSection] = useState<"joueurs" | "staff">("joueurs")
+  const [selectedPlayer, setSelectedPlayer] = useState<Teammate | null>(null)
+  const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null)
 
   const goalkeepers = teammates.filter(p => p.position === "Gardien")
   const defenders = teammates.filter(p => p.position.includes("Defenseur") || p.position.includes("Lateral"))
@@ -809,12 +1098,13 @@ export function TeamScreen({ club }: { club: Club }) {
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     {group.players.map((player, index) => (
-                      <motion.div
+                      <motion.button
                         key={player.id}
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: index * 0.03 }}
-                        className={`p-3 rounded-2xl border transition-all ${
+                        onClick={() => setSelectedPlayer(player)}
+                        className={`p-3 rounded-2xl border transition-all text-left ${
                           player.isSelf ? "border-2 shadow-md" : "border-border bg-card"
                         }`}
                         style={{
@@ -823,14 +1113,14 @@ export function TeamScreen({ club }: { club: Club }) {
                         }}
                       >
                         <div className="flex items-center gap-2.5">
-                          <div
-                            className="w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
-                            style={{
-                              background: player.isSelf ? club.primaryColor : `${club.primaryColor}12`,
-                              color: player.isSelf ? "white" : club.primaryColor,
-                            }}
-                          >
-                            {player.avatar}
+                          <div className="w-11 h-11 rounded-full overflow-hidden flex-shrink-0 shadow-sm border border-border">
+                            <Image
+                              src={player.profileImage}
+                              alt={player.name}
+                              width={44}
+                              height={44}
+                              className="w-full h-full object-cover"
+                            />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1">
@@ -853,7 +1143,7 @@ export function TeamScreen({ club }: { club: Club }) {
                           </div>
                         </div>
                         <p className="text-[10px] text-muted-foreground mt-1.5 line-clamp-1">{player.position}</p>
-                      </motion.div>
+                      </motion.button>
                     ))}
                   </div>
                 </div>
@@ -868,31 +1158,113 @@ export function TeamScreen({ club }: { club: Club }) {
               className="space-y-2.5"
             >
               {staffMembers.map((member, index) => (
-                <motion.div
+                <motion.button
                   key={member.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="flex items-center gap-3 p-4 rounded-2xl bg-card border border-border"
+                  onClick={() => setSelectedStaff(member)}
+                  className="w-full text-left flex items-center gap-3 p-4 rounded-2xl bg-card border border-border"
                 >
-                  <div
-                    className="w-13 h-13 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
-                    style={{ background: `${club.secondaryColor}20`, color: club.primaryColor }}
-                  >
-                    {member.avatar}
+                  <div className="w-14 h-14 rounded-full overflow-hidden flex-shrink-0 shadow-sm border border-border">
+                    <Image
+                      src={member.profileImage}
+                      alt={member.name}
+                      width={56}
+                      height={56}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="font-semibold text-foreground">{member.name}</h4>
                     <p className="text-xs text-muted-foreground">{member.role}</p>
+                    {member.experience && (
+                      <p className="text-[10px] text-muted-foreground mt-0.5">{member.experience} d'experience</p>
+                    )}
                   </div>
                   <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                </motion.div>
+                </motion.button>
               ))}
             </motion.div>
           )}
         </AnimatePresence>
       </div>
+
+      {/* Player Detail Sheet */}
+      <AnimatePresence>
+        {selectedPlayer && (
+          <PlayerDetailSheet player={selectedPlayer} club={club} onClose={() => setSelectedPlayer(null)} />
+        )}
+      </AnimatePresence>
+
+      {/* Staff Detail Sheet */}
+      <AnimatePresence>
+        {selectedStaff && (
+          <StaffDetailSheet staff={selectedStaff} club={club} onClose={() => setSelectedStaff(null)} />
+        )}
+      </AnimatePresence>
     </motion.div>
+  )
+}
+
+// ============ STAFF DETAIL SHEET ============
+function StaffDetailSheet({ staff, club, onClose }: { staff: StaffMember; club: Club; onClose: () => void }) {
+  return (
+    <>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="fixed inset-0 bg-black/60 z-50"
+      />
+      <motion.div
+        initial={{ y: "100%" }}
+        animate={{ y: 0 }}
+        exit={{ y: "100%" }}
+        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+        className="fixed bottom-0 inset-x-0 bg-background rounded-t-3xl z-50 max-h-[60vh] overflow-y-auto"
+      >
+        <div className="flex justify-center pt-3 pb-2">
+          <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
+        </div>
+        <div className="px-5 pb-8 space-y-5">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-18 h-18 rounded-2xl overflow-hidden shadow-lg border-2 flex-shrink-0" style={{ borderColor: club.primaryColor }}>
+                <Image src={staff.profileImage} alt={staff.name} width={72} height={72} className="w-full h-full object-cover" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-foreground">{staff.name}</h3>
+                <p className="text-sm text-muted-foreground">{staff.role}</p>
+              </div>
+            </div>
+            <button onClick={onClose} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center mt-1">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="space-y-2">
+            {staff.experience && (
+              <div className="flex items-center justify-between p-3 rounded-xl bg-card border border-border">
+                <span className="text-sm text-muted-foreground">Experience</span>
+                <span className="text-sm font-semibold text-foreground">{staff.experience}</span>
+              </div>
+            )}
+            {staff.specialty && (
+              <div className="flex items-center justify-between p-3 rounded-xl bg-card border border-border">
+                <span className="text-sm text-muted-foreground">Specialite</span>
+                <span className="text-sm font-semibold text-foreground">{staff.specialty}</span>
+              </div>
+            )}
+            <div className="flex items-center justify-between p-3 rounded-xl bg-card border border-border">
+              <span className="text-sm text-muted-foreground">Club</span>
+              <span className="text-sm font-semibold text-foreground">{club.name}</span>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </>
   )
 }
 
@@ -931,7 +1303,7 @@ export function AnnouncementsScreen({ club, onBack }: { club: Club; onBack: () =
         {unreadCount > 0 && (
           <div className="bg-white/15 backdrop-blur-sm rounded-xl p-3 flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-              <Bell className="w-4 h-4 text-white" />
+              <Megaphone className="w-4 h-4 text-white" />
             </div>
             <div>
               <p className="text-sm font-semibold text-white">{unreadCount} non lue{unreadCount > 1 ? "s" : ""}</p>
