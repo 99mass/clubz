@@ -585,9 +585,11 @@ export function StaffCalendrierScreen({ club, allClubs }: { club: Club; allClubs
                 const config = eventTypeConfig[event.type]
                 const EventIcon = config.icon
 
-                // Match card with team logos
+                // Match card - same design as AgendaScreen
                 if (event.type === "match" && event.opponentIndex !== undefined) {
                   const opponent = allClubs.filter(c => c.id !== club.id)[event.opponentIndex]
+                  const homeTeam = event.isHome ? club : opponent
+                  const awayTeam = event.isHome ? opponent : club
                   return (
                     <motion.button
                       key={event.id}
@@ -595,65 +597,81 @@ export function StaffCalendrierScreen({ club, allClubs }: { club: Club; allClubs
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.05 }}
                       onClick={() => setSelectedEvent(event)}
-                      className="w-full rounded-2xl overflow-hidden border border-border bg-card text-left"
+                      className="w-full rounded-2xl overflow-hidden text-left"
+                      style={{ background: `linear-gradient(135deg, ${club.primaryColor}15, ${club.secondaryColor}15)` }}
                     >
-                      {/* Competition banner */}
-                      <div className="px-4 py-1.5 text-center" style={{ background: `${club.primaryColor}10` }}>
-                        <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: club.primaryColor }}>{event.competition}</span>
-                      </div>
-
-                      {/* Teams row */}
-                      <div className="px-4 py-4 flex items-center justify-between">
-                        {/* Home team */}
-                        <div className="flex flex-col items-center gap-2 flex-1">
-                          <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-border bg-muted flex items-center justify-center">
-                            {event.isHome ? (
-                              <Image src={club.logo} alt={club.name} width={40} height={40} className="object-contain" />
-                            ) : opponent ? (
-                              <Image src={opponent.logo} alt={opponent.name} width={40} height={40} className="object-contain" />
-                            ) : <Trophy className="w-5 h-5 text-muted-foreground" />}
+                      <div className="p-4">
+                        {/* Date and home/away badge */}
+                        <div className="flex items-center justify-between mb-3">
+                          <div
+                            className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold"
+                            style={{ background: club.primaryColor, color: "white" }}
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                            {event.isHome ? "Domicile" : "Exterieur"}
                           </div>
-                          <span className="text-xs font-semibold text-foreground text-center leading-tight">
-                            {event.isHome ? club.name.split(" ").pop() : opponent?.name.split(" ").pop() || "Adversaire"}
-                          </span>
+                          <span className="text-xs text-muted-foreground">{event.date} - {event.time}</span>
                         </div>
 
-                        {/* VS and time */}
-                        <div className="flex flex-col items-center gap-1 px-3">
-                          <span className="text-lg font-black text-muted-foreground/50">VS</span>
-                          <span className="text-xs font-bold" style={{ color: club.primaryColor }}>{event.time}</span>
-                          <span className="text-[10px] text-muted-foreground">{event.date}</span>
-                        </div>
-
-                        {/* Away team */}
-                        <div className="flex flex-col items-center gap-2 flex-1">
-                          <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-border bg-muted flex items-center justify-center">
-                            {!event.isHome ? (
-                              <Image src={club.logo} alt={club.name} width={40} height={40} className="object-contain" />
-                            ) : opponent ? (
-                              <Image src={opponent.logo} alt={opponent.name} width={40} height={40} className="object-contain" />
-                            ) : <Trophy className="w-5 h-5 text-muted-foreground" />}
+                        {/* Teams display */}
+                        <div className="flex items-center justify-between gap-2">
+                          {/* Home team */}
+                          <div className="flex flex-col items-center flex-1 min-w-0">
+                            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white p-0.5 shadow-lg flex-shrink-0">
+                              <Image
+                                src={homeTeam?.logo || "/placeholder.svg"}
+                                alt={homeTeam?.name || "Equipe"}
+                                width={56} height={56}
+                                className="w-full h-full object-cover rounded-full"
+                              />
+                            </div>
+                            <p className="font-bold text-foreground text-xs sm:text-sm text-center mt-2 line-clamp-1">
+                              {homeTeam?.name || "A determiner"}
+                            </p>
                           </div>
-                          <span className="text-xs font-semibold text-foreground text-center leading-tight">
-                            {!event.isHome ? club.name.split(" ").pop() : opponent?.name.split(" ").pop() || "Adversaire"}
-                          </span>
-                        </div>
-                      </div>
 
-                      {/* Footer */}
-                      <div className="px-4 py-2.5 border-t border-border flex items-center justify-between bg-muted/30">
-                        <div className="flex items-center gap-1.5">
-                          <MapPin className="w-3 h-3 text-muted-foreground" />
-                          <span className="text-[10px] text-muted-foreground truncate max-w-[150px]">{event.location}</span>
-                        </div>
-                        {event.convocations && (
-                          <div className="flex items-center gap-1.5">
-                            <UserCheck className="w-3 h-3" style={{ color: club.primaryColor }} />
-                            <span className="text-[10px] font-medium" style={{ color: club.primaryColor }}>
-                              {event.totalPlayers || 0}/{event.convocations} convoques
+                          {/* VS and competition */}
+                          <div className="flex flex-col items-center px-2 flex-shrink-0">
+                            <p className="text-lg sm:text-xl font-bold text-foreground">VS</p>
+                            <span
+                              className="mt-1 px-2 py-0.5 rounded-full text-[9px] font-medium border whitespace-nowrap"
+                              style={{ borderColor: `${club.primaryColor}50`, color: club.primaryColor }}
+                            >
+                              {event.competition}
                             </span>
                           </div>
-                        )}
+
+                          {/* Away team */}
+                          <div className="flex flex-col items-center flex-1 min-w-0">
+                            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white p-0.5 shadow-lg flex-shrink-0">
+                              <Image
+                                src={awayTeam?.logo || "/placeholder.svg"}
+                                alt={awayTeam?.name || "Equipe"}
+                                width={56} height={56}
+                                className="w-full h-full object-cover rounded-full"
+                              />
+                            </div>
+                            <p className="font-bold text-foreground text-xs sm:text-sm text-center mt-2 line-clamp-1">
+                              {awayTeam?.name || "A determiner"}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Location + convocation status */}
+                        <div className="flex items-center justify-between mt-4 pt-3 border-t border-border/50">
+                          <p className="text-xs text-muted-foreground truncate flex-1 mr-2">{event.location}</p>
+                          {event.convocations && (
+                            <div
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full flex-shrink-0"
+                              style={{ background: `${club.primaryColor}15` }}
+                            >
+                              <Clipboard className="w-3.5 h-3.5" style={{ color: club.primaryColor }} />
+                              <span className="text-[10px] font-semibold" style={{ color: club.primaryColor }}>
+                                {event.totalPlayers || 0}/{event.convocations} convoques
+                              </span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </motion.button>
                   )
@@ -735,6 +753,21 @@ export function StaffCalendrierScreen({ club, allClubs }: { club: Club; allClubs
 function EventDetailSheet({ event, club, allClubs, onClose }: { event: CalendarEvent; club: Club; allClubs: Club[]; onClose: () => void }) {
   const config = eventTypeConfig[event.type]
   const EventIcon = config.icon
+  const isMatch = event.type === "match"
+  const [showConvocation, setShowConvocation] = useState(false)
+
+  if (isMatch && showConvocation) {
+    const opponent = event.opponentIndex !== undefined
+      ? allClubs.filter(c => c.id !== club.id)[event.opponentIndex]
+      : undefined
+    return <ConvocationSheet event={event} club={club} opponent={opponent} onBack={() => setShowConvocation(false)} onClose={onClose} />
+  }
+
+  const opponent = isMatch && event.opponentIndex !== undefined
+    ? allClubs.filter(c => c.id !== club.id)[event.opponentIndex]
+    : undefined
+  const homeTeam = event.isHome ? club : opponent
+  const awayTeam = event.isHome ? opponent : club
 
   return (
     <>
@@ -744,26 +777,57 @@ function EventDetailSheet({ event, club, allClubs, onClose }: { event: CalendarE
         animate={{ y: 0 }}
         exit={{ y: "100%" }}
         transition={{ type: "spring", damping: 25, stiffness: 300 }}
-        className="fixed bottom-0 inset-x-0 bg-background rounded-t-3xl z-50 max-h-[70vh] overflow-y-auto"
+        className="fixed bottom-0 inset-x-0 bg-background rounded-t-3xl z-50 max-h-[85vh] overflow-y-auto"
       >
         <div className="flex justify-center pt-3 pb-2">
           <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
         </div>
         <div className="px-4 pb-8">
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: `${config.color}15` }}>
-                <EventIcon className="w-6 h-6" style={{ color: config.color }} />
-              </div>
-              <div>
-                <h3 className="font-bold text-foreground">{event.title}</h3>
-                <span className="text-xs font-medium px-2 py-0.5 rounded-full" style={{ background: `${config.color}15`, color: config.color }}>{config.label}</span>
-              </div>
-            </div>
+          {/* Close button */}
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-xs font-medium px-2.5 py-1 rounded-full" style={{ background: `${config.color}15`, color: config.color }}>{config.label}</span>
             <button onClick={onClose} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
               <X className="w-4 h-4" />
             </button>
           </div>
+
+          {/* Match header with teams - same gradient style */}
+          {isMatch && opponent ? (
+            <div className="rounded-2xl overflow-hidden mb-4" style={{ background: `linear-gradient(135deg, ${club.primaryColor}15, ${club.secondaryColor}15)` }}>
+              <div className="p-4">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex flex-col items-center flex-1 min-w-0">
+                    <div className="w-14 h-14 rounded-full bg-white p-0.5 shadow-lg flex-shrink-0">
+                      <Image src={homeTeam?.logo || "/placeholder.svg"} alt={homeTeam?.name || ""} width={56} height={56} className="w-full h-full object-cover rounded-full" />
+                    </div>
+                    <p className="font-bold text-foreground text-xs text-center mt-2 line-clamp-1">{homeTeam?.name}</p>
+                    <p className="text-[10px] text-muted-foreground">Domicile</p>
+                  </div>
+                  <div className="flex flex-col items-center px-2 flex-shrink-0">
+                    <p className="text-xl font-bold text-foreground">VS</p>
+                    <span className="mt-1 px-2 py-0.5 rounded-full text-[9px] font-medium border whitespace-nowrap" style={{ borderColor: `${club.primaryColor}50`, color: club.primaryColor }}>
+                      {event.competition}
+                    </span>
+                    <p className="text-[10px] text-muted-foreground whitespace-nowrap mt-1">{event.time}</p>
+                  </div>
+                  <div className="flex flex-col items-center flex-1 min-w-0">
+                    <div className="w-14 h-14 rounded-full bg-white p-0.5 shadow-lg flex-shrink-0">
+                      <Image src={awayTeam?.logo || "/placeholder.svg"} alt={awayTeam?.name || ""} width={56} height={56} className="w-full h-full object-cover rounded-full" />
+                    </div>
+                    <p className="font-bold text-foreground text-xs text-center mt-2 line-clamp-1">{awayTeam?.name}</p>
+                    <p className="text-[10px] text-muted-foreground">Exterieur</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: `${config.color}15` }}>
+                <EventIcon className="w-6 h-6" style={{ color: config.color }} />
+              </div>
+              <h3 className="font-bold text-foreground text-lg">{event.title}</h3>
+            </div>
+          )}
 
           <div className="space-y-3">
             <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/50">
@@ -775,43 +839,300 @@ function EventDetailSheet({ event, club, allClubs, onClose }: { event: CalendarE
               <span className="text-sm text-foreground">{event.location}</span>
             </div>
 
-            {event.type === "match" && event.convocations && (
+            {/* Convocation summary for match */}
+            {isMatch && event.convocations && (
               <div className="p-4 rounded-xl bg-card border border-border">
                 <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">Convocations</h4>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <UserCheck className="w-4 h-4" style={{ color: "#22c55e" }} />
-                    <span className="text-sm text-foreground">{event.totalPlayers || 0} confirmes</span>
+                    <span className="text-sm text-foreground">{event.totalPlayers || 0} convoques</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Users className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">sur {event.convocations} convoques</span>
-                  </div>
+                  <span className="text-sm text-muted-foreground">/ {event.convocations} places</span>
                 </div>
-                <div className="h-2 rounded-full bg-muted mt-3 overflow-hidden">
-                  <div
+                <div className="h-2.5 rounded-full bg-muted overflow-hidden">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${((event.totalPlayers || 0) / event.convocations) * 100}%` }}
+                    transition={{ duration: 0.8 }}
                     className="h-full rounded-full"
-                    style={{
-                      background: club.primaryColor,
-                      width: `${((event.totalPlayers || 0) / event.convocations) * 100}%`,
-                    }}
+                    style={{ background: club.primaryColor }}
                   />
                 </div>
               </div>
             )}
 
-            <button
-              className="w-full py-3 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2"
-              style={{ background: club.primaryColor }}
-            >
-              {event.type === "match" ? (
-                <><Clipboard className="w-4 h-4" /> Gerer les convocations</>
-              ) : (
-                <><Edit3 className="w-4 h-4" /> Modifier l&apos;evenement</>
-              )}
-            </button>
+            {/* Main action button */}
+            {isMatch ? (
+              <button
+                onClick={() => setShowConvocation(true)}
+                className="w-full py-3.5 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2"
+                style={{ background: club.primaryColor }}
+              >
+                <Clipboard className="w-4 h-4" />
+                Gerer les convocations
+              </button>
+            ) : (
+              <button
+                className="w-full py-3.5 rounded-xl text-sm font-semibold text-white flex items-center justify-center gap-2"
+                style={{ background: club.primaryColor }}
+              >
+                <Edit3 className="w-4 h-4" />
+                Modifier l&apos;evenement
+              </button>
+            )}
           </div>
         </div>
+      </motion.div>
+    </>
+  )
+}
+
+// ============ CONVOCATION SHEET ============
+function ConvocationSheet({ event, club, opponent, onBack, onClose }: {
+  event: CalendarEvent; club: Club; opponent?: Club; onBack: () => void; onClose: () => void
+}) {
+  const [selectedPlayers, setSelectedPlayers] = useState<Set<number>>(() => {
+    // Pre-select some fit players
+    const fitPlayers = squadPlayers.filter(p => p.status === "fit").slice(0, event.totalPlayers || 0)
+    return new Set(fitPlayers.map(p => p.id))
+  })
+  const [filterPos, setFilterPos] = useState("all")
+  const [isSending, setIsSending] = useState(false)
+  const [isSent, setIsSent] = useState(false)
+
+  const maxConvocations = event.convocations || 18
+
+  const togglePlayer = (id: number) => {
+    setSelectedPlayers(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+      } else if (next.size < maxConvocations) {
+        next.add(id)
+      }
+      return next
+    })
+  }
+
+  const positionFilters = [
+    { key: "all", label: "Tous" },
+    { key: "Gardien", label: "Gardiens" },
+    { key: "Defenseur", label: "Defense" },
+    { key: "Milieu", label: "Milieu" },
+    { key: "Attaquant", label: "Attaque" },
+  ]
+
+  const filteredPlayers = filterPos === "all"
+    ? squadPlayers
+    : squadPlayers.filter(p => p.position.toLowerCase().includes(filterPos.toLowerCase()))
+
+  const handleSend = () => {
+    setIsSending(true)
+    setTimeout(() => {
+      setIsSending(false)
+      setIsSent(true)
+    }, 1500)
+  }
+
+  const homeTeam = event.isHome ? club : opponent
+  const awayTeam = event.isHome ? opponent : club
+
+  return (
+    <>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/60 z-50" />
+      <motion.div
+        initial={{ y: "100%" }}
+        animate={{ y: 0 }}
+        exit={{ y: "100%" }}
+        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+        className="fixed bottom-0 inset-x-0 bg-background rounded-t-3xl z-50 max-h-[92vh] flex flex-col"
+      >
+        <div className="flex justify-center pt-3 pb-2 flex-shrink-0">
+          <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
+        </div>
+
+        {/* Success state */}
+        {isSent ? (
+          <div className="flex flex-col items-center justify-center py-12 px-4">
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", duration: 0.5 }}
+              className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
+              style={{ background: club.primaryColor }}
+            >
+              <Check className="w-8 h-8 text-white" />
+            </motion.div>
+            <p className="text-foreground font-bold text-lg mb-1">Convocations envoyees</p>
+            <p className="text-sm text-muted-foreground text-center mb-6">
+              {selectedPlayers.size} joueurs ont ete notifies pour le match
+            </p>
+            <button
+              onClick={onClose}
+              className="px-8 py-3 rounded-xl text-sm font-semibold text-white"
+              style={{ background: club.primaryColor }}
+            >
+              Fermer
+            </button>
+          </div>
+        ) : (
+          <>
+            {/* Header */}
+            <div className="px-4 pb-3 flex-shrink-0">
+              <div className="flex items-center justify-between mb-3">
+                <button onClick={onBack} className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <ChevronDown className="w-4 h-4 rotate-90" />
+                  Retour
+                </button>
+                <button onClick={onClose} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Match mini header */}
+              <div className="flex items-center justify-center gap-3 py-2 mb-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-white p-0.5 shadow">
+                    <Image src={homeTeam?.logo || "/placeholder.svg"} alt="" width={32} height={32} className="w-full h-full object-cover rounded-full" />
+                  </div>
+                  <span className="text-xs font-semibold text-foreground">{homeTeam?.name?.split(" ").pop()}</span>
+                </div>
+                <span className="text-xs font-bold text-muted-foreground">vs</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold text-foreground">{awayTeam?.name?.split(" ").pop()}</span>
+                  <div className="w-8 h-8 rounded-full bg-white p-0.5 shadow">
+                    <Image src={awayTeam?.logo || "/placeholder.svg"} alt="" width={32} height={32} className="w-full h-full object-cover rounded-full" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Counter */}
+              <div className="flex items-center justify-between p-3 rounded-xl" style={{ background: `${club.primaryColor}10` }}>
+                <div>
+                  <p className="text-xs text-muted-foreground">Joueurs selectionnes</p>
+                  <p className="text-lg font-bold text-foreground">
+                    <span style={{ color: club.primaryColor }}>{selectedPlayers.size}</span>
+                    <span className="text-muted-foreground text-sm font-normal"> / {maxConvocations}</span>
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-muted-foreground">{event.date}</p>
+                  <p className="text-xs font-semibold text-foreground">{event.time} - {event.location}</p>
+                </div>
+              </div>
+
+              {/* Position filter */}
+              <div className="flex items-center gap-1.5 mt-3 overflow-x-auto pb-1 scrollbar-hide">
+                {positionFilters.map(f => (
+                  <button
+                    key={f.key}
+                    onClick={() => setFilterPos(f.key)}
+                    className="px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all"
+                    style={{
+                      background: filterPos === f.key ? club.primaryColor : "var(--muted)",
+                      color: filterPos === f.key ? "white" : "var(--muted-foreground)",
+                    }}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Player list - scrollable */}
+            <div className="flex-1 overflow-y-auto px-4 pb-2">
+              <div className="space-y-1.5">
+                {filteredPlayers.map((player) => {
+                  const isSelected = selectedPlayers.has(player.id)
+                  const status = statusConfig[player.status || "fit"]
+                  const isUnavailable = player.status === "injured" || player.status === "suspended"
+
+                  return (
+                    <button
+                      key={player.id}
+                      onClick={() => !isUnavailable && togglePlayer(player.id)}
+                      disabled={isUnavailable}
+                      className="w-full flex items-center gap-3 p-3 rounded-xl transition-all text-left"
+                      style={{
+                        background: isSelected ? `${club.primaryColor}10` : isUnavailable ? "var(--muted)" : "var(--card)",
+                        border: `1.5px solid ${isSelected ? club.primaryColor : "var(--border)"}`,
+                        opacity: isUnavailable ? 0.5 : 1,
+                      }}
+                    >
+                      {/* Selection indicator */}
+                      <div
+                        className="w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all"
+                        style={{
+                          borderColor: isSelected ? club.primaryColor : "var(--border)",
+                          background: isSelected ? club.primaryColor : "transparent",
+                        }}
+                      >
+                        {isSelected && <Check className="w-3.5 h-3.5 text-white" />}
+                      </div>
+
+                      {/* Player photo */}
+                      <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border border-border">
+                        <Image src={player.profileImage} alt={player.name} width={40} height={40} className="w-full h-full object-cover" />
+                      </div>
+
+                      {/* Player info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-semibold text-foreground truncate">{player.name}</span>
+                          {player.isCapitain && (
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: `${club.primaryColor}15`, color: club.primaryColor }}>C</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="text-[10px] text-muted-foreground">#{player.number}</span>
+                          <span className="text-[10px] text-muted-foreground">{player.position}</span>
+                        </div>
+                      </div>
+
+                      {/* Status + Stats */}
+                      <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                        <span
+                          className="text-[9px] font-medium px-2 py-0.5 rounded-full"
+                          style={{ background: status.bg, color: status.color }}
+                        >
+                          {status.label}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">{player.matches}m / {player.goals}b</span>
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Bottom action bar */}
+            <div className="p-4 border-t border-border flex-shrink-0">
+              <button
+                onClick={handleSend}
+                disabled={selectedPlayers.size === 0 || isSending}
+                className="w-full py-3.5 rounded-xl text-sm font-semibold text-white disabled:opacity-50 flex items-center justify-center gap-2"
+                style={{ background: club.primaryColor }}
+              >
+                {isSending ? (
+                  <>
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
+                    />
+                    Envoi en cours...
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4" />
+                    Envoyer les convocations ({selectedPlayers.size} joueurs)
+                  </>
+                )}
+              </button>
+            </div>
+          </>
+        )}
       </motion.div>
     </>
   )
