@@ -329,10 +329,10 @@ export function ClubApp({ club, allClubs, onBack, isGuest, userRole, userPhone, 
 {/* Regular tab screens - hidden when any overlay is active */}
   {/* JOUEUR-SPECIFIC TABS */}
   {!showMyTickets && !showDonation && !showNotifications && !showMembership && !showAnnouncements && userRole === "joueur" && activeTab === "accueil" && (
-    <JoueurAccueilScreen key="joueur-accueil" club={club} onShowNotifications={() => setShowNotifications(true)} onShowAnnouncements={() => setShowAnnouncements(true)} onGoToCalendar={() => setActiveTab("calendrier")} onGoToTeam={() => setActiveTab("equipe")} />
+    <JoueurAccueilScreen key="joueur-accueil" club={club} allClubs={allClubs} onShowNotifications={() => setShowNotifications(true)} onShowAnnouncements={() => setShowAnnouncements(true)} onGoToCalendar={() => setActiveTab("calendrier")} onGoToTeam={() => setActiveTab("equipe")} />
   )}
   {!showMyTickets && !showDonation && !showNotifications && !showMembership && !showAnnouncements && userRole === "joueur" && activeTab === "calendrier" && (
-    <CalendrierJoueurScreen key="joueur-calendrier" club={club} />
+    <CalendrierJoueurScreen key="joueur-calendrier" club={club} allClubs={allClubs} />
   )}
   {!showMyTickets && !showDonation && !showNotifications && !showMembership && !showAnnouncements && userRole === "joueur" && activeTab === "equipe" && (
     <TeamScreen key="joueur-equipe" club={club} />
