@@ -31,12 +31,19 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
     >
       {/* Animated football pattern background */}
       <div className="absolute inset-0 opacity-10">
-        {[...Array(6)].map((_, i) => (
+        {[
+          { xOffset: -80, dur: 4.3 },
+          { xOffset: 120, dur: 5.1 },
+          { xOffset: -40, dur: 4.7 },
+          { xOffset: 90, dur: 5.5 },
+          { xOffset: -150, dur: 4.0 },
+          { xOffset: 60, dur: 5.8 },
+        ].map((item, i) => (
           <motion.div
             key={i}
             className="absolute"
             initial={{ 
-              x: Math.random() * 400 - 200, 
+              x: item.xOffset, 
               y: -100,
               rotate: 0 
             }}
@@ -45,7 +52,7 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
               rotate: 360 
             }}
             transition={{
-              duration: 4 + Math.random() * 2,
+              duration: item.dur,
               repeat: Infinity,
               delay: i * 0.5,
               ease: "linear"
