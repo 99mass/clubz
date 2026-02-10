@@ -534,11 +534,11 @@ function AccueilScreen({ club, allClubs, userRole, isGuest, onLogin, onShowMyTic
         {(userRole === "membre" || userRole === "joueur" || userRole === "staff" || userRole === "admin" ? [
           { icon: Award, label: "Adhesion", action: "adhesion" as const },
           { icon: Newspaper, label: "Actu", action: "actu" as const },
-          { icon: ShoppingBag, label: "Boutique", action: "boutique" as const },
+          { icon: Ticket, label: "Billets", action: "billets" as const },
           { icon: Gift, label: "Soutenir", action: "don" as const },
         ] : [
           { icon: Ticket, label: "Billets", action: "billets" as const },
-          { icon: ShoppingBag, label: "Boutique", action: "boutique" as const },
+          { icon: Award, label: "Adhesion", action: "adhesion" as const },
           { icon: Gift, label: "Soutenir", action: "don" as const },
           { icon: BarChart3, label: "Stats", action: "stats" as const },
         ]).map((item) => (
@@ -551,14 +551,14 @@ function AccueilScreen({ club, allClubs, userRole, isGuest, onLogin, onShowMyTic
                 } else {
                   onShowMyTickets()
                 }
-              } else if (item.action === "boutique") {
-                onGoToTab("boutique")
               } else if (item.action === "don") {
                 onShowDonation()
               } else if (item.action === "adhesion") {
                 onShowMembership()
               } else if (item.action === "actu") {
                 onGoToTab("actu")
+              } else if (item.action === "stats") {
+                onGoToTab("agenda")
               }
             }}
             className="flex flex-col items-center gap-1.5 p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-card border border-border hover:border-primary/30 transition-all"

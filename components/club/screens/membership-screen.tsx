@@ -116,7 +116,7 @@ export function MembershipScreen({ club, userRole, isGuest, onLogin, onBack }: M
   const [activeSection, setActiveSection] = useState<"card" | "status" | "history">("card")
 
   if (isGuest || userRole === "guest" || userRole === "supporter") {
-    return <MembershipCTA club={club} onLogin={onLogin} isGuest={isGuest} />
+    return <MembershipCTA club={club} onLogin={onLogin} isGuest={isGuest} onBack={onBack} />
   }
 
   const membership = mockMembership
@@ -481,7 +481,9 @@ export function MembershipScreen({ club, userRole, isGuest, onLogin, onBack }: M
 }
 
 // ============ MEMBERSHIP CTA (for non-members) ============
-function MembershipCTA({ club, onLogin, isGuest }: { club: Club; onLogin: () => void; isGuest: boolean }) {
+function MembershipCTA({ club, onLogin, isGuest, onBack }: { club: Club; onLogin: () => void; isGuest: boolean; onBack?: () => void }) {
+  const [showTierSelection, setShowTierSelection] = useState(false)
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -489,7 +491,20 @@ function MembershipCTA({ club, onLogin, isGuest }: { club: Club; onLogin: () => 
       exit={{ opacity: 0 }}
       className="p-4 space-y-5 pb-20"
     >
-      <h2 className="font-bold text-foreground text-lg">Adhesion</h2>
+      {/* Header with back */}
+      {onBack ? (
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onBack}
+            className="w-9 h-9 rounded-full border border-border flex items-center justify-center"
+          >
+            <ArrowLeft className="w-5 h-5 text-foreground" />
+          </button>
+          <h2 className="font-bold text-foreground text-lg">Adhesion</h2>
+        </div>
+      ) : (
+        <h2 className="font-bold text-foreground text-lg">Adhesion</h2>
+      )}
 
       {/* Hero */}
       <div
@@ -519,6 +534,7 @@ function MembershipCTA({ club, onLogin, isGuest }: { club: Club; onLogin: () => 
           </button>
         ) : (
           <button
+            onClick={() => setShowTierSelection(true)}
             className="px-6 py-3 rounded-xl font-semibold text-sm transition-all relative z-10"
             style={{ background: club.secondaryColor, color: club.primaryColor }}
           >
@@ -530,12 +546,13 @@ function MembershipCTA({ club, onLogin, isGuest }: { club: Club; onLogin: () => 
       {/* Tiers list */}
       <div className="space-y-3">
         {membershipTiers.map((tier, index) => (
-          <motion.div
+          <motion.button
             key={tier.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
-            className="p-4 rounded-xl bg-card border border-border"
+            onClick={() => setShowTierSelection(true)}
+            className="w-full text-left p-4 rounded-xl bg-card border border-border hover:border-primary/30 transition-all"
           >
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-2.5">
@@ -571,10 +588,169 @@ function MembershipCTA({ club, onLogin, isGuest }: { club: Club; onLogin: () => 
                 </p>
               )}
             </div>
-          </motion.div>
+          </motion.button>
         ))}
       </div>
+
+      {/* Tier Selection Bottom Sheet */}
+      <AnimatePresence>
+        {showTierSelection && (
+          <TierSelectionSheet
+            club={club}
+            onClose={() => setShowTierSelection(false)}
+          />
+        )}
+      </AnimatePresence>
     </motion.div>
+  )
+}
+
+// ============ TIER SELECTION BOTTOM SHEET (for new members) ============
+function TierSelectionSheet({ club, onClose }: { club: Club; onClose: () => void }) {
+  const [selectedTier, setSelectedTier] = useState<MembershipTier | null>(null)
+  const [paymentMethod, setPaymentMethod] = useState<"wave" | "orange" | null>(null)
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [isSuccess, setIsSuccess] = useState(false)
+
+  const handleSubscribe = () => {
+    if (!selectedTier || !paymentMethod) return
+    setIsProcessing(true)
+    setTimeout(() => {
+      setIsProcessing(false)
+      setIsSuccess(true)
+      setTimeout(onClose, 2000)
+    }, 2000)
+  }
+
+  return (
+    <>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="fixed inset-0 bg-black/60 z-50"
+      />
+      <motion.div
+        initial={{ y: "100%" }}
+        animate={{ y: 0 }}
+        exit={{ y: "100%" }}
+        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+        className="fixed bottom-0 inset-x-0 bg-background rounded-t-3xl z-50 max-h-[85vh] overflow-y-auto"
+      >
+        <div className="flex justify-center pt-3 pb-2">
+          <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
+        </div>
+        <div className="flex items-center justify-between px-4 pb-3">
+          <h3 className="text-lg font-bold text-foreground">
+            {isSuccess ? "Bienvenue!" : "Choisir votre adhesion"}
+          </h3>
+          <button onClick={onClose} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {isSuccess ? (
+          <div className="flex flex-col items-center justify-center py-8 px-4">
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", duration: 0.5 }}
+              className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
+              style={{ background: club.primaryColor }}
+            >
+              <Check className="w-8 h-8 text-white" />
+            </motion.div>
+            <p className="text-foreground font-semibold mb-1">Adhesion confirmee!</p>
+            <p className="text-sm text-muted-foreground text-center">
+              Bienvenue parmi les membres {selectedTier?.name} de {club.name}
+            </p>
+          </div>
+        ) : (
+          <div className="px-4 pb-8 space-y-4">
+            {membershipTiers.map((tier) => (
+              <button
+                key={tier.id}
+                onClick={() => setSelectedTier(tier)}
+                className="w-full p-4 rounded-xl text-left border-2 transition-all"
+                style={{
+                  borderColor: selectedTier?.id === tier.id ? tier.color : "var(--border)",
+                  background: selectedTier?.id === tier.id ? `${tier.color}08` : "var(--card)",
+                }}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <tier.icon className="w-5 h-5" style={{ color: tier.color }} />
+                    <span className="font-bold text-foreground">{tier.name}</span>
+                  </div>
+                  <span className="font-bold" style={{ color: tier.color }}>
+                    {tier.price.toLocaleString()} FCFA
+                  </span>
+                </div>
+                <div className="space-y-1">
+                  {tier.benefits.map((b, i) => (
+                    <div key={i} className="flex items-center gap-1.5">
+                      <Check className="w-3 h-3 flex-shrink-0" style={{ color: tier.color }} />
+                      <span className="text-xs text-muted-foreground">{b}</span>
+                    </div>
+                  ))}
+                </div>
+              </button>
+            ))}
+
+            {selectedTier && (
+              <div>
+                <h4 className="font-semibold text-foreground text-sm mb-2">Mode de paiement</h4>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setPaymentMethod("wave")}
+                    className="flex-1 flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all"
+                    style={{ borderColor: paymentMethod === "wave" ? "#1DC1EC" : "transparent", background: paymentMethod === "wave" ? "transparent" : "var(--muted)" }}
+                  >
+                    <div className="w-10 h-10 rounded-full bg-[#1DC1EC] flex items-center justify-center">
+                      <span className="text-white font-bold">W</span>
+                    </div>
+                    <span className="text-xs font-medium">Wave</span>
+                  </button>
+                  <button
+                    onClick={() => setPaymentMethod("orange")}
+                    className="flex-1 flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all"
+                    style={{ borderColor: paymentMethod === "orange" ? "#FF6600" : "transparent", background: paymentMethod === "orange" ? "transparent" : "var(--muted)" }}
+                  >
+                    <div className="w-10 h-10 rounded-full bg-[#FF6600] flex items-center justify-center">
+                      <span className="text-white font-bold text-sm">OM</span>
+                    </div>
+                    <span className="text-xs font-medium">Orange Money</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <button
+              onClick={handleSubscribe}
+              disabled={!selectedTier || !paymentMethod || isProcessing}
+              className="w-full py-3.5 rounded-xl text-sm font-semibold text-white disabled:opacity-50 flex items-center justify-center gap-2"
+              style={{ background: club.primaryColor }}
+            >
+              {isProcessing ? (
+                <>
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
+                  />
+                  Traitement...
+                </>
+              ) : selectedTier ? (
+                `Adherer ${selectedTier.name} - ${selectedTier.price.toLocaleString()} FCFA`
+              ) : (
+                "Selectionnez un niveau"
+              )}
+            </button>
+          </div>
+        )}
+      </motion.div>
+    </>
   )
 }
 
